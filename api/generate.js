@@ -1,4 +1,3 @@
-require('dotenv').config();
 
 const promptCache = new Map();
 const CACHE_MAX_ENTRIES = 500;
