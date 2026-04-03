@@ -1,11 +1,11 @@
 {
   "name": "cineprompt",
   "version": "1.0.0",
-  "description": "",
-  "main": "server.js",
+  "description": "AI Prompt Studio for CinePrompt",
+  "main": "api/generate.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node api/generate.js"
   },
   "keywords": [],
   "author": "",
@@ -13,6 +13,7 @@
   "type": "commonjs",
   "dependencies": {
     "express": "^5.2.1",
-    "openai": "^6.33.0"
+    "openai": "^6.33.0",
+    "node-fetch": "^2.7.0"
   }
 }
