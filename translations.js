@@ -1,0 +1,432 @@
+const translations = {
+    en: {
+        navbar_home: "Home",
+        navbar_hub: "Services Hub",
+        navbar_generator: "Generator",
+        navbar_library: "Library",
+        navbar_builder: "Builder",
+        navbar_improver: "Improver",
+        navbar_community: "Community",
+        navbar_dev: "Dev Mode",
+        navbar_history: "History",
+        search_placeholder: "Search tools, prompts, or navigation...",
+        history_title: "Recent Prompts",
+        history_empty: "Your history is empty.",
+        history_no_title: "No Title",
+        clear_all: "Clear All",
+        model_selector_label: "AI Model:",
+        copy_result: "Copy Result",
+        delete_item: "Delete Item",
+        
+        // Home
+        home_hero_title: "Design the Future with Smart Prompts",
+        home_hero_desc: "The premier platform for high-performance prompt engineering. Simple inputs, brilliant outputs.",
+        home_smart_gen: "Smart Generate",
+        home_try: "Try:",
+        
+        // Feature Cards
+        feature_writing_title: "Content Writing",
+        feature_writing_desc: "Structured prompts for blogs, emails, and professional scripts.",
+        feature_image_title: "Image Generation",
+        feature_image_desc: "Technical details (lighting, lens, style) injected automatically.",
+        feature_dev_title: "Dev & Coding",
+        feature_dev_desc: "Technical Dev Mode prompts with precise requirement mapping.",
+        btn_start_engineering: "Start Engineering",
+        
+        // Video Section
+        video_title: "See Prompt Studio in Action 🎬",
+        video_desc: "Learn how to transform your simple ideas into expert-level prompts in less than 60 seconds.",
+        video_feature_ai: "AI-Powered Enhancement",
+        video_feature_click: "One-Click Generation",
+        video_feature_export: "Export Anywhere",
+
+        // Dashboard / Hub
+        hub_title: "Unified Services Hub",
+        hub_desc: "Access all our professional AI tools from one central workspace.",
+        category_text: "Text Tools",
+        category_image: "Image Tools",
+        category_video: "Video Tools",
+        category_ecommerce: "E-commerce",
+        category_marketing: "Marketing",
+        category_design: "Design",
+        
+        // Tool Names
+        tool_generate_prompts: "Generate Prompts",
+        tool_check_prompts: "Check Prompts",
+        tool_ai_detector: "AI Text Detector",
+        tool_human_rewriting: "Human Rewriting",
+        tool_image_gen: "Image Prompt Generator",
+        tool_gemini_image: "Gemini Image Prompts",
+        tool_image_to_prompt: "Image-to-Prompt",
+        tool_merge_images: "Merge Images",
+        tool_video_script: "Video Scripting",
+        tool_scene_breakdown: "Scene Breakdown",
+        tool_product_copy: "Product Copy",
+        tool_ad_generator: "Ad Generator",
+        tool_email_campaigns: "Email Campaigns",
+        tool_social_strategy: "Social Strategy",
+        tool_ui_ux_copy: "UI/UX Copy",
+        tool_color_palettes: "Color Palettes",
+        
+        // Workspace
+        back_to_hub: "Back to Hub",
+        input_label: "Input Content:",
+        input_placeholder: "Enter your text or idea here...",
+        execute_btn: "Execute Tool",
+        result_label: "Result Output:",
+        
+        // Generator
+        gen_title: "Platinum Generator",
+        gen_desc: "Applying automatic prompt enhancement layers for maximum precision.",
+        gen_core_idea: "Core Idea / Concept:",
+        gen_examples: "Examples:",
+        gen_btn: "Generate Enhanced Prompt",
+        gen_result_label: "Professional Output:",
+        
+        // FAQ
+        faq_title: "Frequently Asked Questions",
+        faq_q1: "What is AI Prompt Studio?",
+        faq_a1: "A professional platform for crafting and refining high-performance AI prompts.",
+        faq_q2: "How does the Prompt Improver work?",
+        faq_a2: "It uses advanced models to expand your simple ideas into detailed, structured prompts.",
+        faq_q3: "Is the library free to use?",
+        faq_a3: "Yes, our basic library is free for all creators.",
+
+        // Footer
+        footer_tagline: "Empowering creators with AI",
+        footer_quick_links: "Quick Links",
+        footer_support_legal: "Support & Legal",
+        footer_contact_us: "Contact Us",
+        footer_privacy: "Privacy Policy",
+        footer_terms: "Terms of Service",
+        footer_copyright: "© 2026 AI Prompt Studio Pro. All Rights Reserved.",
+        language_label: "Language",
+        lang_en: "English",
+        lang_ar: "Arabic",
+        lang_fr: "French",
+        lang_es: "Spanish"
+    },
+    ar: {
+        navbar_home: "الرئيسية",
+        navbar_hub: "مركز الخدمات",
+        navbar_generator: "المولد",
+        navbar_library: "المكتبة",
+        navbar_builder: "الباني",
+        navbar_improver: "المحسن",
+        navbar_community: "المجتمع",
+        navbar_dev: "وضع المطور",
+        navbar_history: "السجل",
+        search_placeholder: "ابحث عن الأدوات أو البرومبت...",
+        history_title: "البرومبت الأخيرة",
+        history_empty: "السجل فارغ",
+        history_no_title: "بدون عنوان",
+        clear_all: "مسح الكل",
+        model_selector_label: "نموذج الذكاء الاصطناعي:",
+        copy_result: "نسخ النتيجة",
+        delete_item: "حذف العنصر",
+        
+        // Home
+        home_hero_title: "صمم المستقبل ببرومبت ذكية",
+        home_hero_desc: "المنصة الرائدة لهندسة البرومبت عالية الأداء. مدخلات بسيطة، مخرجات عبقرية.",
+        home_smart_gen: "توليد ذكي",
+        home_try: "جرب:",
+
+        // Feature Cards
+        feature_writing_title: "كتابة المحتوى",
+        feature_writing_desc: "برومبت منظمة للمدونات، رسائل البريد، والسيناريوهات المهنية.",
+        feature_image_title: "توليد الصور",
+        feature_image_desc: "تفاصيل تقنية (إضاءة، عدسة، نمط) يتم حقنها تلقائياً.",
+        feature_dev_title: "المطور والبرمجة",
+        feature_dev_desc: "برومبت وضع المطور التقني مع رسم خرائط دقيقة للمتطلبات.",
+        btn_start_engineering: "ابدأ الهندسة",
+        
+        // Video Section
+        video_title: "شاهد برومبت ستوديو في العمل 🎬",
+        video_desc: "تعلم كيفية تحويل أفكارك البسيطة إلى برومبت خبيرة في أقل من 60 ثانية.",
+        video_feature_ai: "تحسين مدعوم بالذكاء الاصطناعي",
+        video_feature_click: "توليد بنقرة واحدة",
+        video_feature_export: "تصدير في أي مكان",
+
+        // Dashboard / Hub
+        hub_title: "مركز الخدمات الموحد",
+        hub_desc: "الوصول إلى جميع أدوات الذكاء الاصطناعي الاحترافية من مساحة عمل مركزية واحدة.",
+        category_text: "أدوات النصوص",
+        category_image: "أدوات الصور",
+        category_video: "أدوات الفيديو",
+        category_ecommerce: "التجارة الإلكترونية",
+        category_marketing: "التسويق",
+        category_design: "التصميم",
+        
+        // Tool Names
+        tool_generate_prompts: "توليد البرومبت",
+        tool_check_prompts: "فحص البرومبت",
+        tool_ai_detector: "كاشف النصوص الاصطناعية",
+        tool_human_rewriting: "إعادة الكتابة البشرية",
+        tool_image_gen: "مولد برومبت الصور",
+        tool_gemini_image: "برومبت صور جيمناي",
+        tool_image_to_prompt: "صورة إلى برومبت",
+        tool_merge_images: "دمج الصور",
+        tool_video_script: "سيناريو الفيديو",
+        tool_scene_breakdown: "تحليل المشهد",
+        tool_product_copy: "وصف المنتج",
+        tool_ad_generator: "مولد الإعلانات",
+        tool_email_campaigns: "حملات البريد",
+        tool_social_strategy: "استراتيجية التواصل",
+        tool_ui_ux_copy: "نصوص واجهة المستخدم",
+        tool_color_palettes: "لوحات الألوان",
+        
+        // Workspace
+        back_to_hub: "العودة للمركز",
+        input_label: "محتوى المدخلات:",
+        input_placeholder: "أدخل نصك أو فكرتك هنا...",
+        execute_btn: "تنفيذ الأداة",
+        result_label: "النتيجة النهائية:",
+        
+        // Generator
+        gen_title: "المولد البلاتيني",
+        gen_desc: "تطبيق طبقات تحسين البرومبت التلقائية لأقصى قدر من الدقة.",
+        gen_core_idea: "الفكرة الأساسية / المفهوم:",
+        gen_examples: "أمثلة:",
+        gen_btn: "توليد برومبت محسن",
+        gen_result_label: "المخرجات الاحترافية:",
+        
+        // FAQ
+        faq_title: "الأسئلة الشائعة",
+        faq_q1: "ما هو AI Prompt Studio؟",
+        faq_a1: "منصة احترافية لصياغة وتحسين برومبت الذكاء الاصطناعي عالية الأداء.",
+        faq_q2: "كيف يعمل محسن البرومبت؟",
+        faq_a2: "يستخدم نماذج متقدمة لتوسيع أفكارك البسيطة إلى برومبت مفصلة ومنظمة.",
+        faq_q3: "هل المكتبة مجانية للاستخدام؟",
+        faq_a3: "نعم، مكتبتنا الأساسية مجانية لجميع المبدعين.",
+
+        // Footer
+        footer_tagline: "تمكين المبدعين باستخدام الذكاء الاصطناعي",
+        footer_quick_links: "روابط سريعة",
+        footer_support_legal: "الدعم والقانون",
+        footer_contact_us: "اتصل بنا",
+        footer_privacy: "سياسة الخصوصية",
+        footer_terms: "شروط الخدمة",
+        footer_copyright: "© 2026 جميع الحقوق محفوظة لـ AI Prompt Studio Pro.",
+        language_label: "اللغة",
+        lang_en: "الإنجليزية",
+        lang_ar: "العربية",
+        lang_fr: "الفرنسية",
+        lang_es: "الإسبانية"
+    },
+    fr: {
+        navbar_home: "Accueil",
+        navbar_hub: "Centre de Services",
+        navbar_generator: "Générateur",
+        navbar_library: "Bibliothèque",
+        navbar_builder: "Constructeur",
+        navbar_improver: "Améliorateur",
+        navbar_community: "Communauté",
+        navbar_dev: "Mode Dev",
+        navbar_history: "Historique",
+        search_placeholder: "Rechercher des outils, prompts...",
+        history_title: "Prompts Récents",
+        history_empty: "Votre historique est vide.",
+        history_no_title: "Sans Titre",
+        clear_all: "Tout Effacer",
+        model_selector_label: "Modèle d'IA:",
+        copy_result: "Copier le résultat",
+        delete_item: "Supprimer l'élément",
+        
+        // Home
+        home_hero_title: "Concevez le futur avec des prompts intelligents",
+        home_hero_desc: "La plateforme de premier plan pour l'ingénierie de prompts haute performance. Des entrées simples, des résultats brillants.",
+        home_smart_gen: "Générer Intelligemment",
+        home_try: "Essayer :",
+
+        // Feature Cards
+        feature_writing_title: "Rédaction de Contenu",
+        feature_writing_desc: "Prompts structurés pour blogs, e-mails et scripts professionnels.",
+        feature_image_title: "Génération d'Images",
+        feature_image_desc: "Détails techniques (éclairage, objectif, style) injectés automatiquement.",
+        feature_dev_title: "Dév & Codage",
+        feature_dev_desc: "Prompts techniques du mode Dev avec mappage précis des besoins.",
+        btn_start_engineering: "Lancer l'Ingénierie",
+        
+        // Video Section
+        video_title: "Voir Prompt Studio en Action 🎬",
+        video_desc: "Apprenez à transformer vos idées simples en prompts experts en moins de 60 secondes.",
+        video_feature_ai: "Amélioration par IA",
+        video_feature_click: "Génération en un clic",
+        video_feature_export: "Exporter partout",
+
+        // Dashboard / Hub
+        hub_title: "Centre de Services Unifié",
+        hub_desc: "Accédez à tous nos outils d'IA professionnels depuis un espace de travail centralisé.",
+        category_text: "Outils de Texte",
+        category_image: "Outils d'Image",
+        category_video: "Outils Vidéo",
+        category_ecommerce: "E-commerce",
+        category_marketing: "Marketing",
+        category_design: "Design",
+        
+        // Tool Names
+        tool_generate_prompts: "Générer des Prompts",
+        tool_check_prompts: "Vérifier les Prompts",
+        tool_ai_detector: "Détecteur de Texte IA",
+        tool_human_rewriting: "Réécriture Humaine",
+        tool_image_gen: "Générateur de Prompt Image",
+        tool_gemini_image: "Prompts Image Gemini",
+        tool_image_to_prompt: "Image en Prompt",
+        tool_merge_images: "Fusionner des Images",
+        tool_video_script: "Scénarisation Vidéo",
+        tool_scene_breakdown: "Analyse de Scène",
+        tool_product_copy: "Copie de Produit",
+        tool_ad_generator: "Générateur de Publicité",
+        tool_email_campaigns: "Campagnes d'E-mail",
+        tool_social_strategy: "Stratégie Sociale",
+        tool_ui_ux_copy: "Copie UI/UX",
+        tool_color_palettes: "Palettes de Couleurs",
+        
+        // Workspace
+        back_to_hub: "Retour au Centre",
+        input_label: "Contenu d'Entrée:",
+        input_placeholder: "Entrez votre texte ou idée ici...",
+        execute_btn: "Exécuter l'Outil",
+        result_label: "Résultat Final:",
+        
+        // Generator
+        gen_title: "Générateur Platinum",
+        gen_desc: "Application de couches d'amélioration automatique des prompts pour une précision maximale.",
+        gen_core_idea: "Idée Centrale / Concept:",
+        gen_examples: "Exemples:",
+        gen_btn: "Générer un Prompt Amélioré",
+        gen_result_label: "Résultat Professionnel:",
+        
+        // FAQ
+        faq_title: "Questions Fréquemment Posées",
+        faq_q1: "Qu'est-ce qu'AI Prompt Studio ?",
+        faq_a1: "Une plateforme professionnelle pour concevoir et affiner des prompts d'IA haute performance.",
+        faq_q2: "Comment fonctionne l'Améliorateur de Prompt ?",
+        faq_a2: "Il utilise des modèles avancés pour transformer vos idées simples en prompts détaillés et structurés.",
+        faq_q3: "La bibliothèque est-elle gratuite ?",
+        faq_a3: "Oui, notre bibliothèque de base est gratuite pour tous les créateurs.",
+
+        // Footer
+        footer_tagline: "Donner du pouvoir aux créateurs avec l'IA",
+        footer_quick_links: "Liens rapides",
+        footer_support_legal: "Support et Juridique",
+        footer_contact_us: "Contactez-nous",
+        footer_privacy: "Politique de confidentialité",
+        footer_terms: "Conditions d'utilisation",
+        footer_copyright: "© 2026 AI Prompt Studio Pro. Tous droits réservés.",
+        language_label: "Langue",
+        lang_en: "Anglais",
+        lang_ar: "Arabe",
+        lang_fr: "Français",
+        lang_es: "Espagnol"
+    },
+    es: {
+        navbar_home: "Inicio",
+        navbar_hub: "Centro de Servicios",
+        navbar_generator: "Generador",
+        navbar_library: "Biblioteca",
+        navbar_builder: "Constructor",
+        navbar_improver: "Mejorador",
+        navbar_community: "Comunidad",
+        navbar_dev: "Modo Dev",
+        navbar_history: "Historial",
+        search_placeholder: "Buscar herramientas, prompts...",
+        history_title: "Prompts Recientes",
+        history_empty: "Tu historial está vacío.",
+        history_no_title: "Sin Título",
+        clear_all: "Borrar Todo",
+        model_selector_label: "Modelo de IA:",
+        copy_result: "Copiar resultado",
+        delete_item: "Eliminar elemento",
+        
+        // Home
+        home_hero_title: "Diseña el futuro con prompts inteligentes",
+        home_hero_desc: "La plataforma líder para la ingeniería de prompts de alto rendimiento. Entradas simples, resultados brillantes.",
+        home_smart_gen: "Generar Inteligente",
+        home_try: "Probar:",
+
+        // Feature Cards
+        feature_writing_title: "Escritura de Contenido",
+        feature_writing_desc: "Prompts estructurados para blogs, correos y guiones profesionales.",
+        feature_image_title: "Generación de Imágenes",
+        feature_image_desc: "Detalles técnicos (iluminación, lente, estilo) inyectados automáticamente.",
+        feature_dev_title: "Desarrollo y Código",
+        feature_dev_desc: "Prompts técnicos del modo Dev con mapeo preciso de requisitos.",
+        btn_start_engineering: "Iniciar Ingeniería",
+        
+        // Video Section
+        video_title: "Ver Prompt Studio en Acción 🎬",
+        video_desc: "Aprende a transformar tus ideas simples en prompts expertos en menos de 60 segundos.",
+        video_feature_ai: "Mejora con IA",
+        video_feature_click: "Generación en un clic",
+        video_feature_export: "Exportar a cualquier lugar",
+
+        // Dashboard / Hub
+        hub_title: "Centro de Servicios Unificado",
+        hub_desc: "Accede a todas nuestras herramientas de IA profesionales desde un espacio de trabajo centralizado.",
+        category_text: "Herramientas de Texto",
+        category_image: "Herramientas de Imagen",
+        category_video: "Herramientas de Vídeo",
+        category_ecommerce: "E-commerce",
+        category_marketing: "Marketing",
+        category_design: "Diseño",
+        
+        // Tool Names
+        tool_generate_prompts: "Generar Prompts",
+        tool_check_prompts: "Verificar Prompts",
+        tool_ai_detector: "Detector de Texto IA",
+        tool_human_rewriting: "Reescritura Humana",
+        tool_image_gen: "Generador de Prompt de Imagen",
+        tool_gemini_image: "Prompts de Imagen Gemini",
+        tool_image_to_prompt: "Imagen a Prompt",
+        tool_merge_images: "Fusionner Imágenes",
+        tool_video_script: "Guion de Vídeo",
+        tool_scene_breakdown: "Análisis de Escena",
+        tool_product_copy: "Copia de Producto",
+        tool_ad_generator: "Generador de Anuncios",
+        tool_email_campaigns: "Campañas de Email",
+        tool_social_strategy: "Estrategia Social",
+        tool_ui_ux_copy: "Copia de UI/UX",
+        tool_color_palettes: "Paletas de Colores",
+        
+        // Workspace
+        back_to_hub: "Volver al Centro",
+        input_label: "Contenido de Entrada:",
+        input_placeholder: "Ingresa tu texto o idea aquí...",
+        execute_btn: "Ejecutar Herramienta",
+        result_label: "Resultado Final:",
+        
+        // Generator
+        gen_title: "Generador Platinum",
+        gen_desc: "Aplicando capas de mejora automática de prompts para una precisión máxima.",
+        gen_core_idea: "Idea Central / Concepto:",
+        gen_examples: "Ejemplos:",
+        gen_btn: "Generar Prompt Mejorado",
+        gen_result_label: "Resultado Profesional:",
+        
+        // FAQ
+        faq_title: "Preguntas Frecuentes",
+        faq_q1: "¿Qué es AI Prompt Studio?",
+        faq_a1: "Una plataforma profesional para crear y refinar prompts de IA de alto rendimiento.",
+        faq_q2: "¿Cómo funciona el Mejorador de Prompts?",
+        faq_a2: "Utiliza modelos avanzados para expandir tus ideas simples en prompts detallados y estructurados.",
+        faq_q3: "¿La biblioteca es gratuita?",
+        faq_a3: "Sí, nuestra biblioteca básica es gratuita para todos los creadores.",
+
+        // Footer
+        footer_tagline: "Empoderando a los creadores con IA",
+        footer_quick_links: "Enlaces rápidos",
+        footer_support_legal: "Soporte y Legal",
+        footer_contact_us: "Contáctenos",
+        footer_privacy: "Política de privacidad",
+        footer_terms: "Términos de servicio",
+        footer_copyright: "© 2026 AI Prompt Studio Pro. Todos los derechos reservados.",
+        language_label: "Idioma",
+        lang_en: "Inglés",
+        lang_ar: "Árabe",
+        lang_fr: "Francés",
+        lang_es: "Español"
+    }
+};
+
+window.translations = translations;

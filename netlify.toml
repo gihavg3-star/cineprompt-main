@@ -1,0 +1,2 @@
+[build]
+  functions = "functions"   # تأكد من هذا السطر

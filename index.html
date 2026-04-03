@@ -1,0 +1,2751 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <!-- Default to Dark Mode - prevent flash -->
+    <script>
+        // Set dark mode by default, but respect saved preference
+        const savedTheme = localStorage.getItem('prompt-studio-theme');
+        if (savedTheme === 'light') {
+            document.documentElement.setAttribute('data-theme', 'light');
+        } else {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+    </script>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Prompt Studio Pro | Advanced Prompt Engineering Platform</title>
+    
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        .history-card { transition: 0.2s; } 
+        .history-card:hover { border-color: #00d4ff !important; background: #252525 !important; } 
+        .history-card button:hover { transform: scale(1.2); } 
+
+        /* Fix for all dropdowns in Generator, Builder, Dev Mode */ 
+        select, select option { 
+            background-color: #1a1a1a !important; 
+            color: #ffffff !important; 
+            border: 1px solid #333 !important; 
+        }
+
+        /* Base styles - default to dark */
+        :root {
+            --bg-color: #050505;
+            --surface-color: #0a0a0a;
+            --text-main: #ffffff;
+            --text-muted: #94a3b8;
+            --primary: #00e5ff;
+            --secondary: #b026ff;
+            --accent: #ff007a;
+            --border: rgba(255, 255, 255, 0.06);
+            --glow: rgba(0, 229, 255, 0.2);
+            --glass: rgba(10, 10, 26, 0.6);
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        /* Light Theme */
+        [data-theme="light"] {
+            --bg-color: #f8fafc;
+            --surface-color: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --primary: #0ea5e9;
+            --secondary: #8b5cf6;
+            --accent: #ec4899;
+            --border: rgba(0, 0, 0, 0.08);
+            --glow: rgba(14, 165, 233, 0.2);
+            --glass: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Dark Theme - absolute defaults */
+        [data-theme="dark"], .dark-mode {
+            --bg-color: #070707;
+            --surface-color: #0a0a1a;
+            --text-main: #ffffff;
+            --text-muted: #94a3b8;
+            --primary: #00e5ff;
+            --secondary: #b026ff;
+            --accent: #ff007a;
+            --border: rgba(255, 255, 255, 0.06);
+            --glow: rgba(0, 229, 255, 0.2);
+            --glass: rgba(10, 10, 26, 0.6);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .surface-theme { background-color: var(--surface-color); border: 1px solid var(--border); }
+        
+        .text-gradient {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .btn-gradient {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .btn-gradient:hover:not(:disabled) {
+            box-shadow: 0 0 25px var(--glow);
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            transition: all 0.2s ease;
+        }
+        .btn-outline:hover:not(:disabled) { background: rgba(0, 229, 255, 0.1); transform: translateY(-1px); }
+
+        .glass-card {
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 1.25rem;
+            transition: all 0.3s ease;
+        }
+        .glass-card:hover { border-color: var(--primary); transform: translateY(-3px); }
+
+        .input-field {
+            background-color: rgba(128, 128, 128, 0.05);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            transition: border-color 0.3s;
+        }
+        .input-field:focus { border-color: var(--primary); outline: none; }
+
+        .nav-link {
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--text-muted);
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 17px; /* Increased font size */
+            font-weight: 500; /* Clean, professional medium weight */
+        }
+        .nav-link i {
+            color: #00d4ff !important; /* Glowy Cyan Icon */
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.7); /* Subtle neon glow */
+            transition: all 0.3s ease;
+        }
+        .nav-link:hover i, .nav-link.active i {
+            text-shadow: 0 0 15px rgba(0, 212, 255, 0.9); /* Stronger glow on active/hover */
+        }
+        .nav-link:hover { 
+            color: var(--text-main); 
+            text-shadow: 0 0 8px #00d4ff; /* Neon glow on hover */
+        }
+        .nav-link.active { 
+            color: var(--primary); 
+            font-weight: 700; 
+            text-shadow: 0 0 8px var(--primary); /* Neon glow for active link */
+        }
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary)); /* Gradient underline */
+            border-radius: 10px;
+            box-shadow: 0 0 12px var(--primary);
+        }
+
+        .example-chip {
+            cursor: pointer;
+            padding: 6px 14px;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: rgba(128, 128, 128, 0.08);
+            border: 1px solid var(--border);
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+        .example-chip:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            box-shadow: 0 0 10px var(--glow);
+            background: rgba(0, 229, 255, 0.05);
+        }
+
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        #toast {
+            position: fixed;
+            bottom: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--surface-color);
+            color: var(--text-main);
+            border: 1px solid var(--primary);
+            padding: 14px 28px;
+            border-radius: 1rem;
+            font-weight: 600;
+            z-index: 9999;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            transition: bottom 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        #toast.show { bottom: 40px; }
+
+        .spinner {
+            border: 2px solid rgba(128,128,128,0.1);
+            border-radius: 50%;
+            border-top: 2px solid var(--primary);
+            width: 16px;
+            height: 16px;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        
+        .prompt-output-content {
+            font-family: 'JetBrains Mono', monospace;
+            line-height: 1.6;
+            letter-spacing: 0.01em;
+        }
+        
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        #search-container {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 40px;
+            overflow: hidden;
+        }
+        #search-container.expanded {
+            width: 240px;
+            background: rgba(128, 128, 128, 0.08);
+            border: 1px solid var(--border);
+            padding-right: 12px;
+        }
+
+        /* Language Dropdown Styles */
+        .lang-selector-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+        #lang-dropdown-menu { 
+            display: none; /* Toggle this to 'block' via JS */ 
+            position: absolute; 
+            top: 100%;
+            right: 0;
+            margin-top: 10px;
+            background: rgba(15, 15, 15, 0.95); 
+            backdrop-filter: blur(12px); 
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            border-radius: 8px; 
+            padding: 10px; 
+            list-style: none; 
+            min-width: 150px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+            z-index: 99999;
+        }
+        [dir="rtl"] #lang-dropdown-menu {
+            right: auto;
+            left: 0;
+        }
+        #lang-dropdown-menu.show {
+            display: block;
+            animation: dropdownFade 0.2s ease-out;
+        }
+        @keyframes dropdownFade {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .lang-dropdown-item {
+            position: relative;
+            transition: all 0.2s ease;
+            text-align: start; /* Logical property */
+            padding: 10px 15px;
+            width: 100%;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-radius: 6px;
+        }
+        .lang-dropdown-item:hover {
+            background: rgba(0, 229, 255, 0.1);
+            color: var(--primary);
+            text-shadow: 0 0 8px var(--primary);
+        }
+
+        #login-modal {
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        #login-modal.hidden { opacity: 0; visibility: hidden; display: none; }
+        #login-modal:not(.hidden) { opacity: 1; visibility: visible; display: flex; }
+        
+        .modal-content {
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        #login-modal:not(.hidden) .modal-content { transform: scale(1); }
+
+        #theme-toggle {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            background: var(--surface-color);
+            transition: all 0.3s ease;
+        }
+        #theme-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px var(--glow);
+            border-color: var(--primary);
+        }
+
+        /* Recent Prompts - Bottom Drawer Styles Removed */
+
+        /* Inline Recent Prompts - Footer Gallery Removed */
+
+        /* Prompt Improver Co-processor Styles */
+        .improver-container {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 32px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .improver-container:hover {
+            border-color: var(--primary);
+            box-shadow: 0 12px 40px rgba(0, 229, 255, 0.1);
+        }
+
+        .improver-input {
+            width: 100%;
+            min-height: 180px;
+            background: rgba(128, 128, 128, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px 24px;
+            font-size: 16px;
+            line-height: 1.6;
+            color: var(--text-main);
+            resize: vertical;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .improver-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 20px var(--glow);
+        }
+
+        .improver-input::placeholder {
+            color: var(--text-muted);
+            opacity: 0.7;
+        }
+
+        .mode-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            margin-bottom: 24px;
+        }
+
+        .mode-btn {
+            padding: 10px 24px;
+            border-radius: 99px;
+            border: 1px solid var(--border);
+            background: rgba(128, 128, 128, 0.08);
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .mode-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(0, 229, 255, 0.1);
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 4px 15px rgba(0, 229, 255, 0.3);
+        }
+
+        .generate-btn {
+            width: 100%;
+            padding: 18px 32px;
+            border-radius: 16px;
+            border: none;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+            font-size: 18px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .generate-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 50%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 0 40px var(--glow), 0 0 80px rgba(0, 229, 255, 0.2);
+        }
+
+        .generate-btn:hover::before {
+            opacity: 1;
+        }
+
+        .generate-btn:active {
+            transform: translateY(-1px);
+        }
+
+        .generate-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .output-box {
+            margin-top: 24px;
+            padding: 24px;
+            background: var(--surface-color);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            min-height: 200px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .output-box.has-content {
+            border-color: var(--primary);
+            box-shadow: 0 0 30px rgba(0, 229, 255, 0.05);
+        }
+
+        .output-box-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .output-box-title {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--primary);
+        }
+
+        .copy-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--glass);
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .copy-btn:hover {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+            box-shadow: 0 0 15px var(--glow);
+        }
+
+        .output-content {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            line-height: 1.7;
+            color: var(--text-main);
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            inset: 0;
+            background: var(--surface-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 16px;
+            gap: 16px;
+        }
+
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid rgba(128, 128, 128, 0.1);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-text {
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .improver-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: linear-gradient(135deg, rgba(0, 229, 255, 0.1), rgba(176, 38, 255, 0.1));
+            border: 1px solid rgba(0, 229, 255, 0.3);
+            border-radius: 99px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--primary);
+            margin-bottom: 24px;
+        }
+
+        .model-indicator {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 12px;
+            text-align: center;
+            opacity: 0.7;
+        }
+
+        /* History Sidebar Drawer */
+        .history-sidebar {
+            position: fixed;
+            top: 0;
+            inset-inline-end: -400px; /* Logical property for RTL support */
+            width: 350px;
+            height: 100vh;
+            z-index: 9999;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(10px);
+            border-inline-start: 1px solid #333; /* Logical property */
+            transition: inset-inline-end 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .history-sidebar.open {
+            inset-inline-end: 0;
+        }
+
+        .history-sidebar-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9998;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .history-sidebar-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .history-sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .history-sidebar-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .history-sidebar-title i {
+            color: var(--primary);
+        }
+
+        .history-sidebar-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .history-sidebar-close:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.5);
+            color: #ef4444;
+        }
+
+        .history-cards-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            max-height: calc(100vh - 140px);
+        }
+
+        .history-cards-container::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .history-cards-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .history-cards-container::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 2px;
+        }
+
+        /* History Card Design */
+        .sidebar-history-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .sidebar-history-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.15);
+            transform: translateX(-4px);
+        }
+
+        .sidebar-history-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(to bottom, var(--primary), var(--secondary));
+            border-radius: 12px 0 0 12px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar-history-card:hover::before {
+            opacity: 1;
+        }
+
+        .sidebar-history-card-text {
+            font-size: 13px;
+            line-height: 1.5;
+            color: var(--text-main);
+            margin-bottom: 10px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .sidebar-history-card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sidebar-history-card-time {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .sidebar-history-card-copy {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-history-card-copy:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #fff;
+            box-shadow: 0 0 10px var(--glow);
+        }
+
+        .history-sidebar-footer {
+            padding: 16px 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .history-clear-all-btn {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .history-clear-all-btn:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.5);
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.2);
+        }
+
+        .history-empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+
+        .history-empty-state i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        .history-empty-state p {
+            font-size: 14px;
+        }
+
+        /* Video Tutorial Section Styles */
+        .video-container-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            margin-inline: auto; /* Use logical properties */
+        }
+
+        /* Critical Fix for RTL Shinking */
+        .video-section-container {
+            width: 100%;
+            max-width: 900px;
+            margin-inline: auto;
+        }
+
+        [dir="rtl"] .video-section-container {
+            width: 100% !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+        }
+
+        [dir="rtl"] .video-container-wrapper {
+            width: 100% !important;
+            max-width: 900px !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+        }
+
+        .video-glass-frame {
+            position: relative;
+            background: rgba(10, 10, 15, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 212, 255, 0.3); /* Neon Cyan Border */
+            border-radius: 20px;
+            padding: 12px;
+            box-shadow: 0 0 25px rgba(0, 212, 255, 0.2), 
+                        0 0 50px rgba(0, 212, 255, 0.1),
+                        inset 0 0 60px rgba(0, 212, 255, 0.05);
+            transition: all 0.4s ease;
+            width: 100%; /* Force full width within parent */
+            box-sizing: border-box;
+        }
+
+        .video-glass-frame:hover {
+            box-shadow: 0 0 35px rgba(0, 212, 255, 0.4), 
+                        0 0 70px rgba(0, 212, 255, 0.2),
+                        inset 0 0 80px rgba(0, 212, 255, 0.1);
+            border-color: rgba(0, 212, 255, 0.5);
+        }
+
+        .video-glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            height: 90%;
+            background: radial-gradient(ellipse at center, rgba(0, 229, 255, 0.15) 0%, transparent 70%);
+            z-index: -1;
+            pointer-events: none;
+            filter: blur(40px);
+        }
+
+        .video-overlay-play {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .video-overlay-play:hover {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .video-overlay-play.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .play-button {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 30px rgba(0, 229, 255, 0.5),
+                        0 0 60px rgba(0, 229, 255, 0.3);
+            transition: all 0.3s ease;
+            padding-left: 5px;
+        }
+
+        .play-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 40px rgba(0, 229, 255, 0.7),
+                        0 0 80px rgba(0, 229, 255, 0.5);
+        }
+
+        .play-button:active {
+            transform: scale(0.95);
+        }
+
+        .video-features {
+            margin-top: 24px;
+        }
+
+        .video-feature-item {
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .video-feature-item:hover {
+            background: rgba(0, 229, 255, 0.05);
+            border-color: rgba(0, 229, 255, 0.2);
+            transform: translateY(-4px) scale(1.05);
+            box-shadow: 0 10px 30px rgba(0, 229, 255, 0.1);
+        }
+#main-footer {
+    background-color: #070707;
+    border-top: 1px solid #222;
+    margin-top: 0; /* Remove top margin as FAQ already has padding and border */
+}
+
+.footer-col {
+    margin-bottom: 20px;
+}
+
+.neon-font {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 0 0 5px #00e5ff, 0 0 10px #00e5ff, 0 0 15px #00e5ff;
+}
+
+.tagline {
+    color: #888;
+    font-size: 0.9rem;
+    margin-top: 5px;
+}
+
+.social-icons {
+    margin-top: 15px;
+}
+
+.social-icons a {
+    color: #888;
+    font-size: 1.2rem;
+    margin-right: 15px;
+    transition: 0.3s;
+}
+
+.social-icons a:hover {
+    color: #00e5ff;
+}
+
+.footer-heading {
+    font-weight: bold;
+    color: #fff;
+    margin-bottom: 15px;
+}
+
+.footer-links {
+    list-style: none;
+    padding: 0;
+}
+
+.footer-links li {
+    margin-bottom: 10px;
+}
+
+.footer-links a {
+    color: #888;
+    text-decoration: none;
+    transition: 0.3s;
+}
+
+.footer-links a:hover {
+    color: #b026ff;
+}
+
+.bottom-bar {
+    border-top: 1px solid #222;
+    padding-top: 20px;
+    margin-top: 20px;
+    text-align: center;
+    color: #888;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+    .footer-col {
+        text-align: center;
+    }
+}
+
+/* FAQ Accordion Styles */
+.faq-item {
+    transition: all 0.3s ease;
+    border: 1px solid var(--border);
+}
+
+.faq-item.active {
+    border-color: var(--primary);
+    box-shadow: 0 0 20px var(--glow);
+}
+
+.faq-question:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.faq-item.active .faq-icon {
+    transform: rotate(180deg);
+    color: var(--primary);
+}
+
+/* Let's change the icon to fa-chevron-down for a more standard accordion look if they want rotation, 
+   but they asked for + to -. Let's use CSS to transform + into - or just toggle classes. */
+
+.faq-answer {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.faq-item.active .faq-answer {
+    max-height: 200px; /* Adjust based on content */
+    opacity: 1;
+    visibility: visible;
+}
+          /* Services Hub Styles */
+        .services-hub-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .category-card {
+            position: relative;
+            background: rgba(10, 10, 26, 0.4);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .category-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            border-color: var(--primary);
+            box-shadow: 0 10px 40px rgba(0, 229, 255, 0.15);
+            background: rgba(10, 10, 26, 0.6);
+        }
+
+        .category-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at top right, rgba(0, 229, 255, 0.1), transparent 60%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .category-card:hover::before {
+            opacity: 1;
+        }
+
+        .category-icon {
+            width: 3.5rem;
+            height: 3.5rem;
+            border-radius: 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--primary);
+            transition: all 0.3s ease;
+        }
+
+        .category-card:hover .category-icon {
+            background: var(--primary);
+            color: #fff;
+            box-shadow: 0 0 20px var(--glow);
+        }
+
+        .sub-tools-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .sub-tool-btn {
+            width: 100%;
+            text-align: left;
+            padding: 0.85rem 1.25rem;
+            border-radius: 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sub-tool-btn:hover {
+            background: rgba(0, 229, 255, 0.1);
+            border-color: var(--primary);
+            color: var(--text-main);
+            transform: translateX(8px);
+            box-shadow: 0 0 20px var(--glow);
+        }
+
+        .sub-tool-btn:active {
+            transform: scale(0.98) translateX(6px);
+        }
+
+        .sub-tool-btn i {
+            font-size: 0.75rem;
+            opacity: 0.5;
+            transition: all 0.3s ease;
+        }
+
+        .sub-tool-btn:hover i {
+            opacity: 1;
+            transform: translateX(3px);
+            color: var(--primary);
+        }
+
+        .tool-pulse {
+            animation: toolPulse 0.4s ease-out;
+        }
+
+        @keyframes toolPulse {
+            0% { box-shadow: 0 0 0 0 rgba(0, 229, 255, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(0, 229, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 229, 255, 0); }
+        }
+
+        .workspace-area {
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+
+        .hub-scale-out {
+            transform: scale(0.95);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .workspace-fade-in {
+            opacity: 1 !important;
+            transform: scale(1) !important;
+        }
+
+        .input-field:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 15px var(--glow);
+            outline: none;
+        }
+
+        .tool-option-select {
+            background-color: #1a1a1a !important;
+            color: #ffffff !important;
+            border: 1px solid #333;
+            padding: 0.75rem;
+            border-radius: 0.75rem;
+            width: 100%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            appearance: none; /* For custom arrow if needed */
+        }
+
+        .tool-option-select option {
+            background-color: #1a1a1a;
+            color: #ffffff;
+        }
+
+        .tool-option-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 15px var(--glow);
+            outline: none;
+        }
+
+        .tool-option-select:hover {
+            border-color: var(--primary);
+            background-color: #222 !important;
+        }
+
+        .workspace-area.hidden {
+            display: none;
+            opacity: 0;
+            transform: scale(1.05);
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            margin-bottom: 2rem;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-main);
+        }
+
+        .tool-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tool-icon {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 0.75rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 1.25rem;
+            box-shadow: 0 0 15px var(--glow);
+        }
+
+        /* Hub Search Highlights */
+        .category-card.search-match {
+            border-color: var(--primary);
+            box-shadow: 0 0 30px var(--glow);
+        }
+
+        .sub-tool-item.search-match {
+            background: rgba(0, 229, 255, 0.15);
+            color: var(--text-main);
+            border-color: var(--primary);
+        }
+
+        .category-card.search-dim {
+            opacity: 0.4;
+            filter: grayscale(0.5);
+        }
+
+        #view-hub.view-section {
+            transition: opacity 0.3s ease;
+        }
+
+        .workspace-content-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        @media (min-width: 1024px) {
+            .workspace-content-grid {
+                grid-template-columns: 3fr 2fr;
+            }
+        }
+
+        .neon-border {
+            border: 1px solid var(--primary);
+            box-shadow: inset 0 0 10px var(--glow), 0 0 10px var(--glow);
+        }
+        /* Modal animations */
+        .modal {
+            transition: opacity 0.3s ease;
+            opacity: 0;
+        }
+        
+        .modal-content {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex flex-col dark-mode">
+
+    <!-- Header & Navigation -->
+    <header class="sticky top-0 z-50 surface-theme backdrop-blur-xl bg-opacity-80" style="overflow: visible !important;">
+        <div class="w-[95%] mx-auto px-4 md:px-10 py-3" style="overflow: visible !important;">
+            <div class="flex flex-col lg:flex-row justify-between items-center gap-4" style="overflow: visible !important;">
+                <div class="flex items-center justify-between w-full lg:w-auto" style="overflow: visible !important;">
+                    <div class="flex items-center gap-4">
+                        <div class="text-2xl font-black cursor-pointer flex items-center gap-2" onclick="navigateTo('home')">
+                            <div class="w-10 h-10 bg-gradient-to-tr from-[var(--primary)] to-[var(--secondary)] rounded-xl flex items-center justify-center shadow-lg">
+                                <i class="fa-solid fa-bolt-lightning text-white text-xl"></i>
+                            </div>
+                            <span class="tracking-tight">PROMPT<span class="text-gradient">STUDIO</span></span>
+                        </div>
+                        <div class="hidden md:flex bg-white/5 h-8 w-[1px]"></div>
+                        <span class="hidden md:inline text-[var(--text-muted)] text-xs font-bold uppercase tracking-widest">Engine v5.0 Platinum</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4 w-full lg:w-auto justify-end" style="overflow: visible !important;">
+                    <!-- Search Box -->
+                    <div id="search-container" class="flex items-center rounded-full h-10 group">
+                        <button id="search-btn" class="p-2 text-[var(--text-muted)] hover:text-[var(--primary)] transition-colors min-w-[40px] cursor-pointer">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </button>
+                        <input type="text" id="global-search-input" class="bg-transparent border-none outline-none text-sm w-full px-2 text-[var(--text-main)] placeholder-white/20" placeholder="Search prompts..." data-i18n="search_placeholder">
+                    </div>
+                    
+                    <button onclick="toggleLoginModal(true)" class="flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--border)] bg-white/5 hover:bg-[var(--primary)]/10 hover:border-[var(--primary)] hover:shadow-[0_0_15px_var(--glow)] transition-all duration-300">
+                        <i class="fa-regular fa-circle-user text-[var(--primary)]"></i>
+                        <span class="text-xs font-bold tracking-wide">Login</span>
+                    </button>
+                </div>
+            </div>
+
+            <nav class="flex flex-nowrap items-center justify-between w-full mt-6 pb-2 gap-x-2 md:gap-x-4 lg:gap-x-6" style="overflow: visible !important; white-space: nowrap;">
+                <div class="flex flex-nowrap items-center gap-2 md:gap-4" style="overflow: visible !important;">
+                    <a onclick="navigateTo('home')" id="tab-home" class="nav-link active"><i class="fas fa-home"></i> <span data-i18n="navbar_home">Home</span></a>
+                    <a onclick="navigateTo('hub')" id="tab-hub" class="nav-link"><i class="fas fa-th-large"></i> <span data-i18n="navbar_hub">Services Hub</span></a>
+                    <a onclick="navigateTo('generator')" id="tab-generator" class="nav-link"><i class="fas fa-wand-magic-sparkles"></i> <span data-i18n="navbar_generator">Generator</span></a>
+                    <a onclick="navigateTo('prompts')" id="tab-prompts" class="nav-link"><i class="fas fa-book-open"></i> <span data-i18n="navbar_library">Library</span></a>
+                    <a onclick="navigateTo('builder')" id="tab-builder" class="nav-link"><i class="fas fa-hammer"></i> <span data-i18n="navbar_builder">Builder</span></a>
+                    <a onclick="navigateTo('improver')" id="tab-improver" class="nav-link"><i class="fas fa-sparkles"></i> <span data-i18n="navbar_improver">Improver</span></a>
+                    <a onclick="toggleHistorySidebar()" id="tab-history" class="nav-link cursor-pointer"><i class="fas fa-history"></i> <span data-i18n="navbar_history">History</span></a>
+                    <a onclick="navigateTo('community')" id="tab-community" class="nav-link"><i class="fas fa-users"></i> <span data-i18n="navbar_community">Community</span></a>
+                    <a onclick="navigateTo('dev')" id="tab-dev" class="nav-link text-secondary">
+                        <i class="fas fa-code"></i> <span data-i18n="navbar_dev">Dev Mode</span>
+                    </a>
+                </div>
+                
+                <!-- Refactored Language Dropdown -->
+                <div class="lang-selector-wrapper flex-shrink-0" style="overflow: visible !important;">
+                    <button id="lang-toggle-btn" class="nav-link">
+                        <i class="fas fa-globe"></i>
+                        <span id="current-lang-text">English</span>
+                        <i class="fas fa-chevron-down" style="font-size: 12px;"></i>
+                    </button>
+                    <div id="lang-dropdown-menu" style="display: none; position: absolute; z-index: 100000; top: 100%; right: 0; margin-top: 10px;">
+                        <div class="lang-dropdown-item" onclick="changeLanguage('en')">English</div>
+                        <div class="lang-dropdown-item" onclick="changeLanguage('ar')">العربية</div>
+                        <div class="lang-dropdown-item" onclick="changeLanguage('fr')">Français</div>
+                        <div class="lang-dropdown-item" onclick="changeLanguage('es')">Español</div>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow w-full max-w-7xl mx-auto px-4 py-8">
+
+        <!-- 1. HOME SECTION -->
+        <section id="view-home" class="view-section fade-in flex flex-col gap-16">
+            <div class="text-center py-10">
+                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--primary)]/10 border border-[var(--primary)]/20 text-[var(--primary)] text-xs font-bold mb-6">
+                    <i class="fa-solid fa-sparkles"></i>
+                    Structural Prompt Engineering Framework v5.0
+                </div>
+                <h1 class="text-5xl md:text-7xl font-black mb-6 leading-tight" data-i18n="home_hero_title">Design the Future with Smart Prompts</h1>
+                <p class="text-[var(--text-muted)] text-xl max-w-2xl mx-auto mb-10 leading-relaxed" data-i18n="home_hero_desc">The premier platform for high-performance prompt engineering. Simple inputs, brilliant outputs.</p>
+                
+                <div class="max-w-4xl mx-auto relative group">
+                    <div class="absolute -inset-1 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
+                    <div class="relative flex flex-col p-4 bg-[var(--surface-color)] rounded-2xl border border-[var(--border)] shadow-2xl">
+                        <div class="flex flex-col md:flex-row gap-3">
+                            <input type="text" id="home-quick-input" class="flex-grow bg-transparent py-4 px-6 text-xl outline-none" placeholder="Write your idea (e.g., shoe advertisement, futuristic city...)" data-i18n="input_placeholder">
+                            <button onclick="handleQuickGen()" class="btn-gradient py-4 px-10 rounded-xl font-black text-lg flex items-center justify-center gap-3" data-i18n="home_smart_gen">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> Smart Generate
+                            </button>
+                        </div>
+                        
+                        <!-- NEW: Example Chips for Home -->
+                        <div class="flex flex-wrap items-center gap-2 mt-4 px-2">
+                            <span class="text-[10px] uppercase font-black text-[var(--text-muted)] tracking-widest mr-2" data-i18n="home_try">Try:</span>
+                            <div class="example-chip" onclick="applyExample('Cyberpunk city', true)">Cyberpunk city</div>
+                            <div class="example-chip" onclick="applyExample('YouTube script about AI', true)">YouTube script about AI</div>
+                            <div class="example-chip" onclick="applyExample('Product ad for sneakers', true)">Product ad for sneakers</div>
+                            <div class="example-chip" onclick="applyExample('Motivational speech', true)">Motivational speech</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="glass-card p-8 group feature-card">
+                    <div class="w-12 h-12 rounded-lg bg-blue-500/10 flex items-center justify-center mb-6 text-blue-400 text-2xl group-hover:bg-blue-500 group-hover:text-white transition-all">
+                        <i class="fa-solid fa-pen-nib"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3" data-i18n="feature_writing_title">Content Writing</h3>
+                    <p class="text-[var(--text-muted)] text-sm mb-6" data-i18n="feature_writing_desc">Structured prompts for blogs, emails, and professional scripts.</p>
+                    <button onclick="navigateTo('generator', {input: 'Creative marketing copy for a SaaS'})" class="w-full btn-outline py-2.5 rounded-lg text-sm font-bold" data-i18n="btn_start_engineering">Start Engineering</button>
+                </div>
+                <div class="glass-card p-8 group feature-card">
+                    <div class="w-12 h-12 rounded-lg bg-purple-500/10 flex items-center justify-center mb-6 text-purple-400 text-2xl group-hover:bg-purple-500 group-hover:text-white transition-all">
+                        <i class="fa-solid fa-image"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3" data-i18n="feature_image_title">Image Generation</h3>
+                    <p class="text-[var(--text-muted)] text-sm mb-6" data-i18n="feature_image_desc">Technical details (lighting, lens, style) injected automatically.</p>
+                    <button onclick="navigateTo('generator', {input: 'Cinematic historical scene portrait'})" class="w-full btn-outline py-2.5 rounded-lg text-sm font-bold" data-i18n="btn_start_engineering">Start Engineering</button>
+                </div>
+                <div class="glass-card p-8 group feature-card">
+                    <div class="w-12 h-12 rounded-lg bg-green-500/10 flex items-center justify-center mb-6 text-green-400 text-2xl group-hover:bg-green-500 group-hover:text-white transition-all">
+                        <i class="fa-solid fa-terminal"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3" data-i18n="feature_dev_title">Dev & Coding</h3>
+                    <p class="text-[var(--text-muted)] text-sm mb-6" data-i18n="feature_dev_desc">Technical Dev Mode prompts with precise requirement mapping.</p>
+                    <button onclick="navigateTo('dev')" class="w-full btn-outline py-2.5 rounded-lg text-sm font-bold" data-i18n="btn_start_engineering">Start Engineering</button>
+                </div>
+            </div>
+
+            <!-- Video Tutorial Section -->
+            <div class="video-section-container max-w-[900px] mx-auto mt-20 mb-8">
+                <div class="text-center mb-8">
+                    <h2 class="text-3xl md:text-4xl font-black mb-3" data-i18n="video_title">See Prompt Studio in Action 🎬</h2>
+                    <p class="text-[var(--text-muted)] text-lg" data-i18n="video_desc">Learn how to transform your simple ideas into expert-level prompts in less than 60 seconds.</p>
+                </div>
+                
+                <div class="video-container-wrapper">
+                    <div class="video-glass-frame" style="padding: 0; overflow: hidden; border: 1px solid rgba(0, 212, 255, 0.3); box-shadow: 0 0 20px rgba(0, 212, 255, 0.5);">
+                        <iframe 
+                            id="tutorial-video"
+                            src="https://drive.google.com/file/d/1Tfv8leploFzJ2Jod21pg9TFxpD6ACKk1/preview" 
+                            width="100%" 
+                            height="500px" 
+                            allow="autoplay" 
+                            style="border: none; display: block;">
+                        </iframe>
+                    </div>
+                    <div class="video-glow"></div>
+                </div>
+                
+                <div class="video-features mt-6 grid grid-cols-3 gap-4 text-center">
+                    <div class="video-feature-item cursor-pointer" onclick="activateAIEnhancement()">
+                        <i class="fa-solid fa-bolt text-[var(--primary)] text-xl mb-2"></i>
+                        <p class="text-xs text-[var(--text-muted)]" data-i18n="video_feature_ai">AI-Powered Enhancement</p>
+                    </div>
+                    <div class="video-feature-item cursor-pointer" onclick="activateOneClickGen()">
+                        <i class="fa-solid fa-wand-magic-sparkles text-[var(--primary)] text-xl mb-2"></i>
+                        <p class="text-xs text-[var(--text-muted)]" data-i18n="video_feature_click">One-Click Generation</p>
+                    </div>
+                    <div class="video-feature-item cursor-pointer" onclick="toggleExportModal(true)">
+                        <i class="fa-solid fa-share-nodes text-[var(--primary)] text-xl mb-2"></i>
+                        <p class="text-xs text-[var(--text-muted)]" data-i18n="video_feature_export">Export Anywhere</p>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- 1.5 SERVICES HUB SECTION -->
+        <section id="view-hub" class="view-section hidden fade-in flex flex-col gap-8">
+            <div id="hub-main-view">
+                <div class="text-center mb-12">
+                    <h2 class="text-4xl md:text-5xl font-black mb-4" data-i18n="hub_title">Unified Services Hub</h2>
+                    <p class="text-[var(--text-muted)] text-lg" data-i18n="hub_desc">Access all our professional AI tools from one central workspace.</p>
+                </div>
+
+                <div class="services-hub-grid">
+                    <!-- Text Tools -->
+                    <div class="category-card" data-category="text">
+                        <div class="flex items-center gap-4">
+                            <div class="category-icon"><i class="fa-solid fa-file-lines"></i></div>
+                            <h3 class="text-xl font-bold" data-i18n="category_text">Text Tools</h3>
+                        </div>
+                        <div class="sub-tools-list">
+                            <button class="sub-tool-btn" data-tool-id="generate-prompts" data-i18n="tool_generate_prompts">Generate Prompts <i class="fa-solid fa-chevron-right"></i></button>
+                            <button class="sub-tool-btn" data-tool-id="check-prompts" data-i18n="tool_check_prompts">Check Prompts <i class="fa-solid fa-chevron-right"></i></button>
+                            <button class="sub-tool-btn" data-tool-id="ai-text-detector" data-i18n="tool_ai_detector">AI Text Detector <i class="fa-solid fa-chevron-right"></i></button>
+                            <button class="sub-tool-btn" data-tool-id="human-rewriting" data-i18n="tool_human_rewriting">Human Rewriting <i class="fa-solid fa-chevron-right"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- Image Tools -->
+                    <div class="category-card" data-category="image">
+                        <div class="flex items-center gap-4">
+                            <div class="category-icon"><i class="fa-solid fa-image"></i></div>
+                            <h3 class="text-xl font-bold" data-i18n="category_image">Image Tools</h3>
+                        </div>
+                        <div class="sub-tools-list">
+                            <button class="sub-tool-btn" data-tool-id="image-prompt-generator" data-i18n="tool_image_gen">Image Prompt Generator <i class="fa-solid fa-chevron-right"></i></button>
+                            <button class="sub-tool-btn" data-tool-id="gemini-image-prompts" data-i18n="tool_gemini_image">Gemini Image Prompts <i class="fa-solid fa-chevron-right"></i></button>
+                            <button class="sub-tool-btn" data-tool-id="image-to-prompt" data-i18n="tool_image_to_prompt">Image-to-Prompt <i class="fa-solid fa-chevron-right"></i></button>
+                            <button class="sub-tool-btn" data-tool-id="merge-images" data-i18n="tool_merge_images">Merge Images <i class="fa-solid fa-chevron-right"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- Video Tools -->
+                    <div class="category-card" data-category="video">
+                        <div class="flex items-center gap-4">
+                            <div class="category-icon"><i class="fa-solid fa-video"></i></div>
+                            <h3 class="text-xl font-bold" data-i18n="category_video">Video Tools</h3>
+                        </div>
+                        <div class="sub-tools-list">
+                            <button class="sub-tool-btn" data-tool-id="video-script-generator" data-i18n="tool_video_script">Video Scripting <i class="fa-solid fa-chevron-right"></i></button>
+                            <button class="sub-tool-btn" data-tool-id="scene-breakdown" data-i18n="tool_scene_breakdown">Scene Breakdown <i class="fa-solid fa-chevron-right"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- E-commerce -->
+                    <div class="category-card" data-category="ecommerce">
+                        <div class="flex items-center gap-4">
+                            <div class="category-icon"><i class="fa-solid fa-cart-shopping"></i></div>
+                            <h3 class="text-xl font-bold" data-i18n="category_ecommerce">E-commerce</h3>
+                        </div>
+                        <div class="sub-tools-list">
+                            <button class="sub-tool-btn" data-tool-id="product-descriptions" data-i18n="tool_product_copy">Product Copy <i class="fa-solid fa-chevron-right"></i></button>
+                            <button class="sub-tool-btn" data-tool-id="ad-copy-generator" data-i18n="tool_ad_generator">Ad Generator <i class="fa-solid fa-chevron-right"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- Marketing -->
+                    <div class="category-card" data-category="marketing">
+                        <div class="flex items-center gap-4">
+                            <div class="category-icon"><i class="fa-solid fa-bullhorn"></i></div>
+                            <h3 class="text-xl font-bold" data-i18n="category_marketing">Marketing</h3>
+                        </div>
+                        <div class="sub-tools-list">
+                            <button class="sub-tool-btn" data-tool-id="email-campaigns" data-i18n="tool_email_campaigns">Email Campaigns <i class="fa-solid fa-chevron-right"></i></button>
+                            <button class="sub-tool-btn" data-tool-id="social-media-strategy" data-i18n="tool_social_strategy">Social Strategy <i class="fa-solid fa-chevron-right"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- Design -->
+                    <div class="category-card" data-category="design">
+                        <div class="flex items-center gap-4">
+                            <div class="category-icon"><i class="fa-solid fa-palette"></i></div>
+                            <h3 class="text-xl font-bold" data-i18n="category_design">Design</h3>
+                        </div>
+                        <div class="sub-tools-list">
+                            <button class="sub-tool-btn" data-tool-id="ui-ux-copy" data-i18n="tool_ui_ux_copy">UI/UX Copy <i class="fa-solid fa-chevron-right"></i></button>
+                            <button class="sub-tool-btn" data-tool-id="color-palette-prompts" data-i18n="tool_color_palettes">Color Palettes <i class="fa-solid fa-chevron-right"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dynamic Workspace -->
+            <div id="hub-workspace" class="hidden workspace-area">
+                <div class="back-btn" onclick="closeTool()" data-i18n="back_to_hub">
+                    <i class="fa-solid fa-arrow-left"></i> Back to Hub
+                </div>
+                
+                <div class="glass-card p-8">
+                    <div class="tool-header">
+                        <div class="tool-icon" id="workspace-tool-icon">
+                            <i class="fa-solid fa-microchip"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-black" id="workspace-tool-title">Tool Name</h3>
+                            <p class="text-[var(--text-muted)] text-sm" id="workspace-tool-desc">Professional AI-powered assistant for your specific task.</p>
+                        </div>
+                    </div>
+
+                    <div class="workspace-content-grid">
+                        <div class="flex flex-col gap-6">
+                            <div id="tool-specific-options" class="flex flex-col gap-6">
+                                <!-- Tool specific HTML will be injected here -->
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                <label class="text-sm font-bold opacity-70" data-i18n="input_label">Input Content:</label>
+                                <textarea id="workspace-input" rows="8" class="w-full input-field rounded-xl p-4 text-lg resize-none" placeholder="Enter your text or idea here..." data-i18n="input_placeholder"></textarea>
+                            </div>
+                            <button id="workspace-gen-btn" class="btn-gradient w-full py-4 rounded-xl font-black text-lg flex items-center justify-center gap-3" data-i18n="execute_btn">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> Execute Tool
+                            </button>
+                        </div>
+
+                        <div class="flex flex-col gap-6">
+                            <div id="workspace-result-container" class="hidden flex flex-col gap-4">
+                                <div class="glass-card p-6 bg-[var(--primary)]/5 border-[var(--primary)]/20">
+                                    <div class="flex justify-between items-center mb-4">
+                                        <span class="text-xs font-black uppercase text-[var(--primary)] tracking-widest" data-i18n="result_label">Result Output:</span>
+                                        <button onclick="copyToClipboard('workspace-result-text')" class="text-[var(--text-muted)] hover:text-[var(--primary)]"><i class="fa-solid fa-copy"></i></button>
+                                    </div>
+                                    <div id="workspace-result-text" class="prompt-output-content text-sm whitespace-pre-wrap"></div>
+                                </div>
+                            </div>
+                            
+                            <div id="workspace-loading" class="hidden flex flex-col items-center justify-center py-12 text-center">
+                                <div class="spinner w-10 h-10 mb-4"></div>
+                                <p class="font-bold text-sm">Processing with AI...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. GENERATOR SECTION -->
+        <section id="view-generator" class="view-section hidden fade-in max-w-5xl mx-auto flex flex-col gap-8">
+            <div class="flex items-center gap-4 border-b border-[var(--border)] pb-6">
+                <div class="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-[var(--primary)] text-xl">
+                    <i class="fa-solid fa-microchip"></i>
+                </div>
+                <div>
+                    <h2 class="text-3xl font-black" data-i18n="gen_title">Platinum Generator</h2>
+                    <p class="text-[var(--text-muted)] text-sm" data-i18n="gen_desc">Applying automatic prompt enhancement layers for maximum precision.</p>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <div class="lg:col-span-7 flex flex-col gap-6">
+                    <div class="glass-card p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <label class="text-sm font-bold opacity-70" data-i18n="gen_core_idea">Core Idea / Concept:</label>
+                            <div class="flex gap-2 items-center">
+                                <span class="text-[10px] text-muted uppercase font-bold tracking-widest" data-i18n="model_selector_label">AI Model:</span>
+                                <select id="prompt-length" class="bg-white/5 border border-white/10 rounded px-2 py-0.5 text-[10px] outline-none cursor-pointer">
+                                    <option value="short">Short</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="detailed" selected>Detailed (Recommended)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <textarea id="gen-input-box" rows="6" class="w-full input-field rounded-xl p-4 text-lg resize-none" placeholder="Write your idea (e.g., shoe advertisement, futuristic city...)" data-i18n="input_placeholder"></textarea>
+                        
+                        <!-- NEW: Example Chips for Generator -->
+                        <div class="flex flex-wrap items-center gap-2 mt-4">
+                            <span class="text-[10px] uppercase font-black text-[var(--text-muted)] tracking-widest mr-1" data-i18n="gen_examples">Examples:</span>
+                            <div class="example-chip" onclick="applyExample('Cyberpunk city')">Cyberpunk city</div>
+                            <div class="example-chip" onclick="applyExample('YouTube script about AI')">YouTube script about AI</div>
+                            <div class="example-chip" onclick="applyExample('Product ad for sneakers')">Product ad for sneakers</div>
+                            <div class="example-chip" onclick="applyExample('Motivational speech')">Motivational speech</div>
+                        </div>
+
+                        <div class="flex flex-wrap gap-2 mt-4 pt-4 border-t border-white/5">
+                            <button class="text-xs font-bold px-3 py-1 bg-white/5 rounded-full hover:bg-[var(--primary)]/20 hover:text-[var(--primary)] transition" onclick="appendInput('cinematic style')">+ Cinematic</button>
+                            <button class="text-xs font-bold px-3 py-1 bg-white/5 rounded-full hover:bg-[var(--primary)]/20 hover:text-[var(--primary)] transition" onclick="appendInput('as a marketing expert')">+ Marketing Pro</button>
+                            <button class="text-xs font-bold px-3 py-1 bg-white/5 rounded-full hover:bg-[var(--primary)]/20 hover:text-[var(--primary)] transition" onclick="appendInput('with clean code focus')">+ Code Quality</button>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col gap-3">
+                        <button id="main-gen-btn" onclick="executeGenerator()" class="btn-gradient w-full py-5 rounded-xl font-black text-xl flex items-center justify-center gap-3" data-i18n="gen_btn">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Generate Enhanced Prompt
+                        </button>
+                        <div class="output"></div>
+                        <!-- NEW: Try Example Button -->
+                        <button onclick="tryRandomExample()" class="btn-outline w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2">
+                            Try Example
+                        </button>
+
+                        <!-- NEW: Helper Text -->
+                        <p class="text-center text-[10px] font-medium text-[var(--text-muted)] opacity-60">
+                            A professional prompt will be generated and ready to use.
+                        </p>
+                    </div>
+
+                    <!-- Recent Prompts - Inline Gallery removed -->
+                </div>
+                
+                <div class="lg:col-span-5 flex flex-col gap-6">
+                    <div id="gen-loading" class="hidden glass-card p-12 flex flex-col items-center justify-center text-center h-full">
+                        <div class="spinner w-12 h-12 mb-4 border-4"></div>
+                        <p class="font-bold">Structural Drafting...</p>
+                        <p class="text-[10px] text-muted mt-2">Active: Role Injection + Context Enrichment</p>
+                    </div>
+                    
+                    <div id="gen-result-container" class="hidden flex flex-col gap-4">
+                        <div class="glass-card p-6 bg-[var(--primary)]/5 border-[var(--primary)]/20 shadow-[0_0_30px_rgba(0,229,255,0.05)]">
+                            <div class="flex justify-between items-center mb-4">
+                                <span class="text-xs font-black uppercase text-[var(--primary)] tracking-widest" data-i18n="gen_result_label">Professional Output:</span>
+                                <div class="flex gap-2">
+                                    <button onclick="executeGenerator()" class="text-[var(--text-muted)] hover:text-[var(--primary)] text-xs flex items-center gap-1"><i class="fa-solid fa-rotate"></i> Regenerate</button>
+                                    <button onclick="copyToClipboard('gen-result-text')" class="text-[var(--text-muted)] hover:text-[var(--primary)]"><i class="fa-solid fa-copy"></i></button>
+                                </div>
+                            </div>
+                            <div id="gen-result-text" class="prompt-output-content text-sm whitespace-pre-wrap text-left border-l-2 border-[var(--primary)]/20 pl-4"></div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button class="flex-grow btn-outline py-2.5 rounded-lg text-xs font-bold" onclick="navigateTo('improver')">Further Improvement</button>
+                            <button class="flex-grow btn-outline py-2.5 rounded-lg text-xs font-bold" onclick="showToast('Saved to library')"><i class="fa-regular fa-bookmark"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- 3. FREE PROMPTS SECTION -->
+        <section id="view-prompts" class="view-section hidden fade-in flex flex-col gap-8">
+            <div class="flex justify-between items-end">
+                <div>
+                    <h2 class="text-4xl font-black mb-2">Prompt <span class="text-gradient">Library</span></h2>
+                    <p class="text-[var(--text-muted)]">Curated, high-performance templates ready to use.</p>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="prompts-grid"></div>
+            <div id="prompts-empty-msg" class="hidden glass-card p-20 text-center flex flex-col items-center justify-center border-dashed">
+                <i class="fa-solid fa-magnifying-glass text-4xl mb-4 opacity-20"></i>
+                <h3 class="font-bold text-xl mb-1">No prompts found</h3>
+                <p class="text-[var(--text-muted)] text-sm">Try a different keyword or check your spelling.</p>
+            </div>
+        </section>
+
+        <!-- 4. BUILDER SECTION -->
+        <section id="view-builder" class="view-section hidden fade-in max-w-4xl mx-auto flex flex-col gap-10">
+            <div class="text-center">
+                <h2 class="text-4xl font-black mb-3">Structural <span class="text-gradient">Builder</span></h2>
+                <p class="text-[var(--text-muted)]">Manually construct your prompt using professional role-based components.</p>
+            </div>
+            <div class="space-y-6">
+                <div class="glass-card p-6 border-l-4 border-l-[var(--primary)]">
+                    <h4 class="font-bold mb-2">Persona / Role</h4>
+                    <select id="build-role" class="w-full input-field rounded-lg p-3 text-sm">
+                        <option>Business Strategy Expert</option>
+                        <option>World-Class Graphic Designer</option>
+                        <option>Senior Software Architect</option>
+                        <option>Professional Screenwriter</option>
+                        <option>Data Scientist</option>
+                    </select>
+                </div>
+                <div class="glass-card p-6 border-l-4 border-l-[var(--secondary)]">
+                    <h4 class="font-bold mb-2">Specific Task</h4>
+                    <textarea id="build-task" class="w-full input-field rounded-lg p-3 text-sm resize-none" rows="3" placeholder="Define the exact output you need..."></textarea>
+                </div>
+                <button onclick="assemblePrompt()" class="btn-gradient w-full py-5 rounded-xl font-black text-xl">Assemble Final Prompt </button>
+                <div id="build-result-box" class="hidden glass-card p-6 bg-green-500/5 border-green-500/20">
+                     <div id="build-result" class="font-mono text-xs leading-relaxed p-4 bg-black/30 rounded-lg"></div>
+                     <button onclick="copyElementText('build-result')" class="w-full mt-4 btn-outline py-2 rounded font-bold text-xs uppercase">Copy to Clipboard</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. PROMPT IMPROVER CO-PROCESSOR SECTION -->
+        <section id="view-improver" class="view-section hidden fade-in max-w-5xl mx-auto flex flex-col gap-8">
+            <div class="text-center mb-4">
+                <div class="improver-badge mx-auto">
+                    <i class="fa-solid fa-brain"></i>
+                    AI Co-Processor Active
+                </div>
+                <h2 class="text-4xl font-black mb-3">Prompt <span class="text-gradient">Improver</span></h2>
+                <p class="text-[var(--text-muted)]">Transform your raw ideas into professional, optimized prompts using our advanced AI engine.</p>
+            </div>
+
+            <div class="improver-container">
+                <!-- Input Area -->
+                <textarea id="raw-prompt-input" class="improver-input" placeholder="Enter your raw idea here... (e.g., a futuristic city, a business email, a Midjourney art prompt)"></textarea>
+
+                <!-- Mode Buttons -->
+                <div class="mode-buttons">
+                    <button class="mode-btn active" data-mode="simple" onclick="setImproverMode('simple')">Simple</button>
+                    <button class="mode-btn" data-mode="advanced" onclick="setImproverMode('advanced')">Advanced</button>
+                    <button class="mode-btn" data-mode="expert" onclick="setImproverMode('expert')">Expert</button>
+                </div>
+
+                <!-- Generate Button -->
+                <button id="improver-generate-btn" onclick="executePromptImprover()" class="generate-btn">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    Generate Professional Prompt
+                </button>
+
+                <!-- Model Indicator -->
+                <div class="model-indicator" id="model-indicator">Powered by Gemma 3 27B</div>
+
+                <!-- Output Box -->
+                <div id="improved-prompt-output-box" class="output-box">
+                    <div class="output-box-header">
+                        <span class="output-box-title">Professional Output</span>
+                        <button class="copy-btn" onclick="copyImproverOutput()" title="Copy to clipboard">
+                            <i class="fa-solid fa-copy"></i>
+                        </button>
+                    </div>
+                    <div id="improver-output-content" class="output-content">
+                        Your improved prompt will appear here...
+                    </div>
+                    <!-- Loading Overlay (hidden by default) -->
+                    <div id="improver-loading" class="loading-overlay hidden">
+                        <div class="loading-spinner"></div>
+                        <div class="loading-text">Engineering your prompt...</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. COMMUNITY SECTION -->
+        <section id="view-community" class="view-section hidden fade-in flex flex-col gap-10">
+            <h2 class="text-4xl font-black border-b border-[var(--border)] pb-6">Community <span class="text-gradient">Feed</span></h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8" id="community-feed"></div>
+            <div id="community-empty-msg" class="hidden glass-card p-20 text-center flex flex-col items-center justify-center border-dashed">
+                <i class="fa-solid fa-face-frown text-4xl mb-4 opacity-20"></i>
+                <h3 class="font-bold text-xl mb-1">No community posts match your search</h3>
+                <p class="text-[var(--text-muted)] text-sm">Try broadening your search term.</p>
+            </div>
+        </section>
+
+        <!-- 7. DEV MODE SECTION -->
+        <section id="view-dev" class="view-section hidden fade-in flex flex-col gap-8 max-w-6xl mx-auto">
+            <div class="surface-theme p-4 rounded-lg bg-black/40 flex items-center gap-4 text-secondary font-mono text-xs border border-secondary/20 shadow-[0_0_15px_rgba(176,38,255,0.1)]">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span class="tracking-widest">CONSOLE ACCESS GRANTED // CATEGORY: TECHNICAL_PROMPTING // ENGINE_V5</span>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <div class="lg:col-span-4 glass-card p-6 flex flex-col gap-4">
+                    <h3 class="font-mono font-bold text-sm tracking-tight border-b border-white/5 pb-2">Technical Params</h3>
+                    <div class="space-y-4 mt-2">
+                        <div>
+                            <label class="text-[10px] font-mono opacity-50 block mb-2">SYSTEM_CONTEXT</label>
+                            <input type="text" id="dev-context" class="w-full bg-white/5 border border-white/10 p-2 text-xs rounded font-mono text-secondary" value="Senior Backend Architect">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-mono opacity-50 block mb-2">REQUIREMENTS_LEVEL</label>
+                            <select class="w-full bg-white/5 border border-white/10 p-2 text-xs rounded font-mono">
+                                <option>Enterprise Grade</option>
+                                <option>MVP Style</option>
+                                <option>High Performance</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="lg:col-span-8 flex flex-col gap-4">
+                    <textarea id="dev-task" class="w-full input-field rounded-xl p-4 font-mono text-sm bg-black/50 border-secondary/30" rows="8" placeholder="// ENTER TECHNICAL TASK TO STRUCTURIZE..."></textarea>
+                    <button onclick="executeDevGenerator()" class="btn-gradient py-4 rounded-xl font-bold font-mono tracking-widest text-xs">EXECUTE_PROMPT_CONSTRUCTION()</button>
+                    <div id="dev-result-box" class="hidden glass-card p-6 bg-secondary/5 border-secondary/20">
+                        <div id="dev-result" class="font-mono text-xs text-green-400" dir="ltr"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FAQ Section -->
+    <section id="faq-section" class="py-20 bg-[#0b0b0b] border-t border-[#222]">
+        <div class="max-w-4xl mx-auto px-4">
+            <h2 class="text-4xl font-black text-center mb-12 text-white" data-i18n="faq_title">Frequently Asked Questions</h2>
+            
+            <div class="space-y-4">
+                <!-- FAQ Item 1 -->
+                <div class="faq-item glass-card overflow-hidden">
+                    <button class="faq-question w-full flex items-center justify-between p-6 text-left focus:outline-none">
+                        <span class="text-lg font-bold text-white" data-i18n="faq_q1">What is AI Prompt Studio?</span>
+                        <i class="fa-solid fa-plus faq-icon transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-answer max-h-0 transition-all duration-300 ease-in-out">
+                        <div class="p-6 pt-0 text-[var(--text-muted)] leading-relaxed" data-i18n="faq_a1">
+                            A professional platform for crafting and refining high-performance AI prompts.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FAQ Item 2 -->
+                <div class="faq-item glass-card overflow-hidden">
+                    <button class="faq-question w-full flex items-center justify-between p-6 text-left focus:outline-none">
+                        <span class="text-lg font-bold text-white" data-i18n="faq_q2">How does the Prompt Improver work?</span>
+                        <i class="fa-solid fa-plus faq-icon transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-answer max-h-0 transition-all duration-300 ease-in-out">
+                        <div class="p-6 pt-0 text-[var(--text-muted)] leading-relaxed" data-i18n="faq_a2">
+                            It uses advanced models to expand your simple ideas into detailed, structured prompts.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FAQ Item 3 -->
+                <div class="faq-item glass-card overflow-hidden">
+                    <button class="faq-question w-full flex items-center justify-between p-6 text-left focus:outline-none">
+                        <span class="text-lg font-bold text-white" data-i18n="faq_q3">Is the library free to use?</span>
+                        <i class="fa-solid fa-plus faq-icon transition-transform duration-300"></i>
+                    </button>
+                    <div class="faq-answer max-h-0 transition-all duration-300 ease-in-out">
+                        <div class="p-6 pt-0 text-[var(--text-muted)] leading-relaxed" data-i18n="faq_a3">
+                            Yes, our basic library is free for all creators.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- History Sidebar Drawer -->
+    <div id="history-sidebar-overlay" class="history-sidebar-overlay" onclick="toggleHistorySidebar()"></div>
+    <aside id="history-sidebar" class="history-sidebar">
+        <div class="history-sidebar-header">
+            <div class="history-sidebar-title" data-i18n="history_title">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                Recent Prompts
+            </div>
+            <button class="history-sidebar-close" onclick="toggleHistorySidebar()" title="Close">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div id="history-cards-container" class="history-cards-container">
+            <!-- History cards will be dynamically inserted here -->
+            <div class="history-empty-state">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <p data-i18n="history_empty">No prompts yet. Start generating!</p>
+            </div>
+        </div>
+        <div class="history-sidebar-footer">
+            <button class="history-clear-all-btn" onclick="clearAllHistorySidebar()" data-i18n="clear_all">
+                <i class="fa-solid fa-trash-can"></i>
+                Clear All History
+            </button>
+        </div>
+    </aside>
+
+    <!-- Theme Switcher -->
+    <button id="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
+        <i id="theme-icon" class="fa-solid fa-moon text-xl text-[var(--primary)]"></i>
+    </button>
+
+    <!-- Login Modal -->
+    <div id="login-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/60 backdrop-blur-md">
+        <div class="modal-content glass-card w-full max-w-md p-8 relative mx-4">
+            <button onclick="toggleLoginModal(false)" class="absolute top-4 right-4 text-[var(--text-muted)] hover:text-[var(--text-main)]">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-gradient-to-tr from-[var(--primary)] to-[var(--secondary)] rounded-2xl flex items-center justify-center shadow-lg mx-auto mb-4">
+                    <i class="fa-solid fa-bolt-lightning text-white text-2xl"></i>
+                </div>
+                <h2 class="text-3xl font-black mb-2">Welcome Back</h2>
+                <p class="text-[var(--text-muted)] text-sm">Access your saved prompts and community features</p>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="text-[10px] font-bold uppercase opacity-50 px-2 block mb-1">Email Address</label>
+                    <input type="email" class="w-full input-field rounded-xl p-4 text-sm" placeholder="name@example.com">
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold uppercase opacity-50 px-2 block mb-1">Password</label>
+                    <input type="password" class="w-full input-field rounded-xl p-4 text-sm" placeholder="••••••••">
+                </div>
+                <button onclick="handleLogin()" class="btn-gradient w-full py-4 rounded-xl font-bold text-lg mt-4">Login</button>
+                <p class="text-center text-[10px] text-[var(--text-muted)] mt-4">This is a demo login (no real authentication)</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div id="export-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/60 backdrop-blur-md">
+        <div class="modal-content glass-card w-full max-w-md p-8 relative mx-4">
+            <button onclick="toggleExportModal(false)" class="absolute top-4 right-4 text-[var(--text-muted)] hover:text-[var(--text-main)]">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-gradient-to-tr from-[var(--primary)] to-[var(--secondary)] rounded-2xl flex items-center justify-center shadow-lg mx-auto mb-4">
+                    <i class="fa-solid fa-share-nodes text-white text-2xl"></i>
+                </div>
+                <h2 class="text-3xl font-black mb-2">Export <span class="text-gradient">Prompt</span></h2>
+                <p class="text-[var(--text-muted)] text-sm">Choose your preferred format to export your professional prompt.</p>
+            </div>
+            
+            <div class="space-y-4">
+                <button onclick="simulateDownload('JSON')" class="flex items-center justify-between w-full p-4 rounded-xl bg-white/5 border border-white/10 hover:border-[var(--primary)] hover:bg-[var(--primary)]/5 transition-all group">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-all">
+                            <i class="fa-solid fa-code"></i>
+                        </div>
+                        <span class="font-bold">JSON Format</span>
+                    </div>
+                    <i class="fa-solid fa-download text-[var(--text-muted)] group-hover:text-[var(--primary)] transition-all"></i>
+                </button>
+                
+                <button onclick="simulateDownload('TXT')" class="flex items-center justify-between w-full p-4 rounded-xl bg-white/5 border border-white/10 hover:border-[var(--primary)] hover:bg-[var(--primary)]/5 transition-all group">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center text-green-400 group-hover:bg-green-500 group-hover:text-white transition-all">
+                            <i class="fa-solid fa-file-lines"></i>
+                        </div>
+                        <span class="font-bold">Text (.txt)</span>
+                    </div>
+                    <i class="fa-solid fa-download text-[var(--text-muted)] group-hover:text-[var(--primary)] transition-all"></i>
+                </button>
+                
+                <button onclick="simulateDownload('PDF')" class="flex items-center justify-between w-full p-4 rounded-xl bg-white/5 border border-white/10 hover:border-[var(--primary)] hover:bg-[var(--primary)]/5 transition-all group">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-lg bg-red-500/20 flex items-center justify-center text-red-400 group-hover:bg-red-500 group-hover:text-white transition-all">
+                            <i class="fa-solid fa-file-pdf"></i>
+                        </div>
+                        <span class="font-bold">PDF Document</span>
+                    </div>
+                    <i class="fa-solid fa-download text-[var(--text-muted)] group-hover:text-[var(--primary)] transition-all"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <footer id="main-footer" class="py-10 mt-20">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Column 1: Brand -->
+                <div class="footer-col">
+                    <h3 class="text-2xl font-black tracking-tight neon-font">PROMPT<span class="text-gradient">STUDIO</span></h3>
+                    <p class="tagline" data-i18n="footer_tagline">Empowering creators with AI</p>
+                    <div class="social-icons">
+                        <a href="javascript:void(0)" onclick="handleSocialClick('Twitter')"><i class="fab fa-twitter"></i></a>
+                        <a href="javascript:void(0)" onclick="handleSocialClick('Discord')"><i class="fab fa-discord"></i></a>
+                        <a href="javascript:void(0)" onclick="handleSocialClick('YouTube')"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+
+                <!-- Column 2: Quick Links -->
+                <div class="footer-col">
+                    <h4 class="footer-heading" data-i18n="footer_quick_links">Quick Links</h4>
+                    <ul class="footer-links">
+                        <li><a href="javascript:void(0)" onclick="scrollToTop()" data-i18n="navbar_home">Home</a></li>
+                        <li><a href="javascript:void(0)" onclick="navigateToImprover()" data-i18n="navbar_improver">Improver ✨</a></li>
+                        <li><a href="javascript:void(0)" onclick="navigateTo('prompts')" data-i18n="navbar_library">Free Library</a></li>
+                        <li><a href="javascript:void(0)" onclick="navigateTo('dev')" data-i18n="navbar_dev">Dev Mode</a></li>
+                    </ul>
+                </div>
+
+                <!-- Column 3: Support & Legal -->
+                <div class="footer-col">
+                    <h4 class="footer-heading" data-i18n="footer_support_legal">Support & Legal</h4>
+                    <ul class="footer-links">
+                        <li><a href="javascript:void(0)" onclick="scrollToFAQ()" data-i18n="faq_title">FAQ</a></li>
+                        <li><a href="javascript:void(0)" onclick="toggleContactModal(true)" data-i18n="footer_contact_us">Contact Us</a></li>
+                        <li><a href="javascript:void(0)" onclick="openLegalModal('privacy')" data-i18n="footer_privacy">Privacy Policy</a></li>
+                        <li><a href="javascript:void(0)" onclick="openLegalModal('terms')" data-i18n="footer_terms">Terms of Service</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="bottom-bar">
+                <p data-i18n="footer_copyright">&copy; 2026 AI Prompt Studio Pro. All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Legal Modal -->
+    <div id="legal-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/60 backdrop-blur-md">
+        <div class="modal-content glass-card w-full max-w-2xl p-8 relative mx-4 max-h-[80vh] overflow-y-auto">
+            <button onclick="toggleLegalModal(false)" class="absolute top-4 right-4 text-[var(--text-muted)] hover:text-[var(--text-main)]">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            <div class="mb-6">
+                <h2 class="text-3xl font-black mb-2" id="legal-modal-title">Legal Document</h2>
+                <div class="h-1 w-20 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] rounded-full"></div>
+            </div>
+            <div id="legal-modal-content" class="text-[var(--text-muted)] text-sm leading-relaxed space-y-4">
+                <!-- Content injected via JS -->
+            </div>
+            <button onclick="toggleLegalModal(false)" class="btn-gradient w-full py-4 rounded-xl font-bold text-lg mt-8">Close Window</button>
+        </div>
+    </div>
+
+    <!-- Contact Modal -->
+    <div id="contact-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/60 backdrop-blur-md">
+        <div class="modal-content glass-card w-full max-w-md p-8 relative mx-4">
+            <button onclick="toggleContactModal(false)" class="absolute top-4 right-4 text-[var(--text-muted)] hover:text-[var(--text-main)]">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-gradient-to-tr from-[var(--primary)] to-[var(--secondary)] rounded-2xl flex items-center justify-center shadow-lg mx-auto mb-4">
+                    <i class="fa-solid fa-envelope text-white text-2xl"></i>
+                </div>
+                <h2 class="text-3xl font-black mb-2">Get in Touch</h2>
+                <p class="text-[var(--text-muted)] text-sm">Have questions? We're here to help.</p>
+            </div>
+            
+            <div class="space-y-6">
+                <div class="p-4 rounded-xl bg-white/5 border border-white/10 text-center">
+                    <p class="text-xs font-bold uppercase tracking-widest text-[var(--text-muted)] mb-2">Support Email</p>
+                    <a href="mailto:support@promptstudio.pro" class="text-xl font-bold text-[var(--primary)] hover:underline">support@promptstudio.pro</a>
+                </div>
+                <div class="flex flex-col gap-3">
+                    <button onclick="window.location.href='mailto:support@promptstudio.pro'" class="btn-gradient w-full py-4 rounded-xl font-bold text-lg">Send Email Now</button>
+                    <button onclick="toggleContactModal(false)" class="btn-outline w-full py-3 rounded-xl font-bold text-sm">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast">Action completed successfully!</div>
+
+    <script src="translations.js"></script>
+    <script src="script.js"></script>
+    <script>
+
+        // --- DATA STORE ---
+        const LIBRARY_PROMPTS = [
+            { id: 1, tag: 'MARKETING', title: 'Facebook Ads Expert', desc: 'Act as a professional FB ads copywriter for high-conversion...', content: 'Act as a professional FB ads copywriter...' },
+            { id: 2, tag: 'MIDJOURNEY', title: 'Realistic Cyberpunk Portrait', desc: 'Cyberpunk portrait, high-fashion neon lighting, 8k...', content: 'Cyberpunk portrait, neon lighting, 8k realism...' },
+            { id: 3, tag: 'WRITING', title: 'SEO Article Generator', desc: 'Create a comprehensive SEO optimized guide for...', content: 'Act as an SEO content strategist...' },
+            { id: 4, tag: 'DEV', title: 'Python Refactoring Tool', desc: 'Refactor the following Python code for PEP8 and performance...', content: 'Refactor the following code for clarity and performance...' },
+            { id: 5, tag: 'IMAGE', title: 'Architecture Minimalist', desc: 'Ultra-modern minimalist glass villa in Iceland, architecture photography...', content: 'Architecture photography, minimalist glass villa, Iceland sunset, 8k render...' },
+            { id: 6, tag: 'WRITING', title: 'Creative Storyteller', desc: 'A deeply emotional noir detective story set in a flooded London...', content: 'Write a noir detective story set in flooded London...' }
+        ];
+
+        for (let i = 7; i <= 40; i++) {
+    LIBRARY_PROMPTS.push({
+        id: i,
+        tag: ['MARKETING','WRITING','DEV','IMAGE'][i % 4],
+        title: `Pro Prompt #${i}`,
+        desc: 'High-quality AI prompt template...',
+        content: 'Generate a highly detailed professional prompt...'
+    });
+}
+        const COMMUNITY_PROMPTS = [
+            { id: 101, user: 'John Doe', initial: 'JD', badge: 'Pro Member', title: 'Pixar-Style 3D Character Generator', content: '3D render of a cute [SUBJECT], pixar style, subsurface scattering, high quality 8k...', likes: 412, comments: 24 },
+            { id: 102, user: 'Alice Smith', initial: 'AS', badge: 'AI Writer', title: 'Convert Messy Notes to Business Plan', content: 'Analyze these voice-to-text notes and structure them into a formal executive summary...', likes: 185, comments: 8 },
+            { id: 103, user: 'TechieVibes', initial: 'TV', badge: 'Dev Specialist', title: 'React Performance Audit', content: 'Act as a senior React dev and audit the following component for unnecessary re-renders...', likes: 256, comments: 12 }
+        ];
+
+        const EXAMPLES = [
+            "Cyberpunk city",
+            "YouTube script about AI",
+            "Product ad for sneakers",
+            "Motivational speech",
+            "Recipe for a vegan lasagna",
+            "Code snippet for a React hook",
+            "Professional email to a client",
+            "Short sci-fi story opening"
+        ];
+
+        // --- CACHE SYSTEM ---
+        async function fetchDataWithCache(payload) {
+            const cacheKey = `api_cache_${btoa(unescape(encodeURIComponent(JSON.stringify(payload))))}`.substring(0, 100);
+            const cachedData = localStorage.getItem(cacheKey);
+            const cacheTimestamp = localStorage.getItem(`${cacheKey}_time`);
+            const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+
+            // Check if cache exists and is still fresh
+            if (cachedData && cacheTimestamp && (Date.now() - parseInt(cacheTimestamp) < CACHE_DURATION)) {
+                console.log("FETCHING FROM CACHE... Success!");
+                return JSON.parse(cachedData);
+            }
+
+            // If no cache or expired, fetch from API
+            console.log("Cache miss. FETCHING FROM API...");
+            const response = await fetch('/api/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json().catch(() => ({}));
+            
+            if (!response.ok) {
+                throw new Error(data?.details || data?.error || `Server error: ${response.status}`);
+            }
+
+            // Store in Cache
+            localStorage.setItem(cacheKey, JSON.stringify(data));
+            localStorage.setItem(`${cacheKey}_time`, Date.now().toString());
+
+            return data;
+        }
+
+        // --- ENGINE ---
+        function generatePrompt() {
+            const input = document.querySelector("textarea")?.value || "";
+
+            if (!input.trim()) {
+                return "Please enter a valid idea.";
+            }
+
+            // Detect type
+            let type = "general";
+
+            if (input.toLowerCase().includes("image") || input.toLowerCase().includes("city")) {
+                type = "image";
+            } else if (input.toLowerCase().includes("code") || input.toLowerCase().includes("react")) {
+                type = "dev";
+            } else if (input.toLowerCase().includes("write") || input.toLowerCase().includes("story")) {
+                type = "writing";
+            }
+
+            let result = "";
+
+            if (type === "image") {
+                result = `
+A highly detailed ${input}, cinematic lighting, ultra realistic, 4K resolution, dramatic atmosphere, professional photography, wide angle, depth of field.
+`;
+            }
+
+            if (type === "writing") {
+                result = `
+You are a professional writer.
+
+Task:
+${input}
+
+Tone:
+Engaging and clear
+
+Output:
+Well-structured content with introduction, body, and conclusion.
+`;
+            }
+
+            if (type === "dev") {
+                result = `
+You are a senior developer.
+
+Task:
+${input}
+
+Requirements:
+- Clean code
+- Best practices
+- Performance optimized
+
+Output:
+Provide clear explanation and code.
+`;
+            }
+
+            if (type === "general") {
+                result = `
+Create a professional and detailed prompt for:
+${input}
+
+Make it clear, structured, and optimized.
+`;
+            }
+
+            return result.trim();
+        }
+
+
+        // --- BUTTON ACTION ---
+        function handleGenerate() {
+            const outputBox = document.querySelector(".output") || document.querySelector("[id*='output']");
+
+            try {
+                const result = generatePrompt();
+                outputBox.textContent = result;
+            } catch (e) {
+                outputBox.textContent = "Engine formatting error.";
+            }
+        }
+        // --- CONFIG & STATE ---
+        const apiKey = "AIzaSyCMuzFLuYRxB7cRTtmaJuSuEkVTpBkSTgc"; 
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'prompt-studio-platinum';
+        let currentSearchQuery = "";
+        let currentPage = 'home';
+
+        // --- NAVIGATION ---
+        function navigateTo(page, params = {}) {
+            currentPage = page;
+            updateUI(page);
+            
+            if (params.input) {
+                const inputField = document.getElementById('gen-input-box') || document.getElementById('home-quick-input');
+                if (inputField) inputField.value = params.input;
+            }
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            if (page === 'prompts') renderPrompts();
+            if (page === 'community') renderCommunity();
+        }
+
+        function updateUI(page) {
+            document.querySelectorAll('.view-section').forEach(sec => sec.classList.add('hidden'));
+            const target = document.getElementById('view-' + page);
+            if (target) target.classList.remove('hidden');
+            
+            // Fix FAQ section visibility - only show on Home
+            const faqSection = document.getElementById('faq-section');
+            if (faqSection) {
+                if (page === 'home') {
+                    faqSection.classList.remove('hidden');
+                } else {
+                    faqSection.classList.add('hidden');
+                }
+            }
+
+            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+            const activeLink = document.getElementById('tab-' + page);
+            if (activeLink) activeLink.classList.add('active');
+        }
+
+        // --- UX ENHANCEMENTS: EXAMPLES ---
+        function applyExample(text, fromHome = false) {
+            if (fromHome) {
+                document.getElementById('home-quick-input').value = text;
+                showToast("Example applied");
+            } else {
+                document.getElementById('gen-input-box').value = text;
+                showToast("Example applied");
+            }
+        }
+
+        function tryRandomExample() {
+            const random = EXAMPLES[Math.floor(Math.random() * EXAMPLES.length)];
+            const input = document.getElementById('gen-input-box');
+            input.value = random;
+            showToast("Example applied");
+        }
+            async function executeGenerator() {
+    const input = document.getElementById('gen-input-box')?.value.trim() || "";
+    const length = document.getElementById('prompt-length')?.value || "detailed";
+    if (!input) return showToast("Enter an idea first");
+
+    const loading = document.getElementById('gen-loading');
+    const resultBox = document.getElementById('gen-result-container');
+    const resultText = document.getElementById('gen-result-text');
+    const btn = document.getElementById('main-gen-btn');
+
+    loading?.classList.remove('hidden');
+    resultBox?.classList.add('hidden');
+    if (btn) btn.disabled = true;
+
+    try {
+        const systemPrompt = `You are a Senior Prompt Engineer. Transform the user idea into a detailed, professional prompt in English. Length: ${length}.`;
+        const data = await fetchDataWithCache({ prompt: input, system: systemPrompt });
+
+        const generatedText = data?.result || "No result";
+        if (resultText) resultText.innerText = generatedText;
+        showToast("Professional prompt generated!");
+        
+        console.log('Attempting to save to history...'); // For debugging
+        const promptToSave = document.getElementById('gen-input-box')?.value || "Unknown Prompt";
+        if (window.saveToHistory) {
+            window.saveToHistory(promptToSave, generatedText);
+        } else {
+            console.error("window.saveToHistory is not defined!");
+        }
+        console.log('Save function triggered for:', promptToSave);
+    } catch (err) {
+        console.error(err);
+        if (resultText) resultText.innerText = "Error: " + (err?.message || "Unknown error");
+    } finally {
+        resultBox?.classList.remove('hidden');
+        loading?.classList.add('hidden');
+        if (btn) btn.disabled = false;
+    }
+}
+
+        function renderPrompts() {
+            const grid = document.getElementById('prompts-grid');
+            const emptyMsg = document.getElementById('prompts-empty-msg');
+            if (!grid) return;
+            const filtered = LIBRARY_PROMPTS.filter(p => 
+                p.title.toLowerCase().includes(currentSearchQuery) || 
+                p.desc.toLowerCase().includes(currentSearchQuery) || 
+                p.tag.toLowerCase().includes(currentSearchQuery)
+            );
+            grid.innerHTML = '';
+            if (filtered.length === 0) {
+                emptyMsg.classList.remove('hidden');
+            } else {
+                emptyMsg.classList.add('hidden');
+                filtered.forEach(p => {
+                    grid.innerHTML += `
+                        <div class="glass-card p-5 group flex flex-col fade-in">
+                            <span class="text-[10px] font-black px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 mb-4 inline-block w-fit">${p.tag}</span>
+                            <h4 class="font-bold mb-2">${highlightSearch(p.title)}</h4>
+                            <p class="text-xs text-[var(--text-muted)] mb-6 flex-grow italic">"${highlightSearch(p.desc)}"</p>
+                            <button onclick="copyPrompt(\`${p.content.replace(/`/g, "\\`")}\`)" class="w-full btn-gradient py-2 rounded-lg text-xs font-bold">Copy Prompt</button>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        function renderCommunity() {
+            const feed = document.getElementById('community-feed');
+            const emptyMsg = document.getElementById('community-empty-msg');
+            if (!feed) return;
+            const filtered = COMMUNITY_PROMPTS.filter(p => 
+                p.title.toLowerCase().includes(currentSearchQuery) || 
+                p.user.toLowerCase().includes(currentSearchQuery) ||
+                p.content.toLowerCase().includes(currentSearchQuery)
+            );
+            feed.innerHTML = '';
+            if (filtered.length === 0) {
+                emptyMsg.classList.remove('hidden');
+            } else {
+                emptyMsg.classList.add('hidden');
+                filtered.forEach(p => {
+                    feed.innerHTML += `
+                        <div class="glass-card p-6 fade-in">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center font-bold text-purple-400 text-xs">${p.initial}</div>
+                                <div>
+                                    <div class="text-sm font-bold">${highlightSearch(p.user)}</div>
+                                    <div class="text-[10px] text-[var(--text-muted)] font-mono">Just now • ${p.badge}</div>
+                                </div>
+                            </div>
+                            <h4 class="font-bold mb-3 text-sm">${highlightSearch(p.title)}</h4>
+                            <div class="bg-black/40 p-4 rounded-xl font-mono text-[11px] mb-4 border border-white/5">
+                                "${highlightSearch(p.content)}"
+                            </div>
+                            <div class="flex items-center justify-between text-xs font-bold">
+                                <div class="flex gap-4 text-[var(--text-muted)]">
+                                    <span class="cursor-pointer hover:text-red-500 transition-colors"><i class="fa-solid fa-heart"></i> ${p.likes}</span>
+                                    <span class="cursor-pointer hover:text-[var(--primary)] transition-colors"><i class="fa-solid fa-comment"></i> ${p.comments}</span>
+                                </div>
+                                <button onclick="copyPrompt(\`${p.content.replace(/`/g, "\\`")}\`)" class="text-[var(--primary)] hover:underline">Copy Prompt</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        function highlightSearch(text) {
+            if (!currentSearchQuery) return text;
+            const regex = new RegExp(`(${currentSearchQuery})`, 'gi');
+            return text.replace(regex, '<span class="bg-primary/30 text-white rounded px-0.5">$1</span>');
+        }
+
+    
+        // --- UI UTILS ---
+        function toggleTheme() {
+            const html = document.documentElement;
+            const body = document.body;
+            const icon = document.getElementById('theme-icon');
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            html.setAttribute('data-theme', newTheme);
+            if (newTheme === 'dark') {
+                body.classList.add('dark-mode');
+                icon.className = 'fa-solid fa-moon text-xl text-[var(--primary)]';
+            } else {
+                body.classList.remove('dark-mode');
+                icon.className = 'fa-solid fa-sun text-xl text-[var(--primary)]';
+            }
+            
+            localStorage.setItem('prompt-studio-theme', newTheme);
+            showToast(`Switched to ${newTheme} mode`);
+        }
+
+        function toggleLoginModal(show) {
+            const modal = document.getElementById('login-modal');
+            if (show) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                setTimeout(() => {
+                    modal.style.opacity = '1';
+                    modal.querySelector('.modal-content').style.transform = 'scale(1)';
+                }, 10);
+            } else {
+                modal.style.opacity = '0';
+                modal.querySelector('.modal-content').style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                }, 300);
+            }
+            document.body.style.overflow = show ? 'hidden' : 'auto';
+        }
+
+        function handleLogin() {
+            showToast("Demo Login Successful!");
+            toggleLoginModal(false);
+        }
+
+        function handleQuickGen() {
+            const val = document.getElementById('home-quick-input').value.trim();
+            if (!val) return showToast("Enter an idea first");
+            navigateTo('generator', { input: val });
+            executeGenerator();
+        }
+
+        function appendInput(txt) {
+            document.getElementById('gen-input-box').value += " " + txt;
+        }
+
+        function copyPrompt(text) { copyToClipboard(text); }
+        window.copyToClipboard = async function(text) { 
+            const textToCopy = document.getElementById(text) ? document.getElementById(text).innerText : text;
+            try { 
+                await navigator.clipboard.writeText(textToCopy); 
+                showToast("Copied to clipboard"); 
+                console.log('Text copied to clipboard'); 
+            } catch (err) { 
+                console.error('Failed to copy text: ', err); 
+                // Fallback
+                const el = document.createElement('textarea');
+                el.value = textToCopy;
+                document.body.appendChild(el);
+                el.select();
+                document.execCommand('copy');
+                document.body.removeChild(el);
+                showToast("Copied to clipboard");
+            } 
+        };
+        function copyElementText(id) { copyToClipboard(id); }
+        function copyToClipboardRaw(text) { copyToClipboard(text); }
+
+        // --- HISTORY SIDEBAR FUNCTIONS ---
+        function toggleHistorySidebar() {
+            const sidebar = document.getElementById('history-sidebar');
+            const overlay = document.getElementById('history-sidebar-overlay');
+            
+            if (sidebar.classList.contains('open')) {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            } else {
+                sidebar.classList.add('open');
+                overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+                if (window.renderHistoryUI) window.renderHistoryUI();
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        document.getElementById('clear-all-history')?.addEventListener('click', () => {
+            if (confirm('Are you sure you want to clear all history?')) {
+                localStorage.removeItem('promptHistory');
+                if (typeof window.renderHistoryUI === 'function') {
+                    window.renderHistoryUI();
+                }
+                showToast('All history cleared');
+            }
+        });
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+        
+        function assemblePrompt() {
+            const role = document.getElementById('build-role').value;
+            const task = document.getElementById('build-task').value;
+            if (!task) return showToast("Define a task first");
+            document.getElementById('build-result').innerText = `Act as a ${role}. Objective: ${task}.`;
+            document.getElementById('build-result-box').classList.remove('hidden');
+        }
+
+        // --- PROMPT IMPROVER CO-PROCESSOR ---
+        let currentImproverMode = 'simple';
+
+        // Fallback model chain: Gemma 3 27B → Hermes 3 405B → Qwen 3.6 Plus → Llama 3.1 70B
+        const FALLBACK_MODELS = [
+            { name: 'Gemma 3 27B', id: 'google/gemma-3-27b-it:free', provider: 'Google' },
+            { name: 'Hermes 3 405B', id: 'nousresearch/hermes-3-llama-3.1-405b:free', provider: 'Nous' },
+            { name: 'Qwen 3.6 Plus', id: 'qwen/qwen-3.6-plus-preview:free', provider: 'Qwen' },
+            { name: 'Llama 3.1 70B', id: 'meta-llama/llama-3.1-70b-instruct:free', provider: 'Meta' }
+        ];
+
+        const MASTER_PROMPT_ENGINEER_INSTRUCTION = `You are a Master Prompt Engineer. Your only task is to analyze the user's raw input idea and the chosen mode (Simple, Advanced, Expert) and engineer a professional, highly detailed, and optimized prompt for AI systems (like ChatGPT, Midjourney, etc.). 
+
+Simple: Direct and clear prompt that gets straight to the point.
+Advanced: Detailed prompt with structured logic, context, and specific requirements.
+Expert: Complete engineering blueprint with constraints, examples, step-by-step instructions, and optimization parameters.
+
+Output ONLY the improved prompt. No explanations, no preamble, no markdown code blocks unless necessary for the content.`;
+
+        function setImproverMode(mode) {
+            currentImproverMode = mode;
+            // Update UI
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.mode === mode) {
+                    btn.classList.add('active');
+                }
+            });
+            showToast(`Mode set to ${mode.charAt(0).toUpperCase() + mode.slice(1)}`);
+        }
+
+        async function executePromptImprover() {
+            const input = document.getElementById('raw-prompt-input')?.value.trim();
+            if (!input) {
+                showToast('Enter your raw idea first');
+                return;
+            }
+
+            const outputBox = document.getElementById('improved-prompt-output-box');
+            const outputContent = document.getElementById('improver-output-content');
+            const loading = document.getElementById('improver-loading');
+            const modelIndicator = document.getElementById('model-indicator');
+            const btn = document.getElementById('improver-generate-btn');
+
+            // Show loading
+            loading?.classList.remove('hidden');
+            btn.disabled = true;
+            outputBox?.classList.remove('has-content');
+
+            // Build user prompt with mode context
+            const userPrompt = `MODE: ${currentImproverMode.toUpperCase()}\n\nRAW INPUT: ${input}\n\nTransform this into a professional, optimized prompt.`;
+
+            let result = null;
+            let lastError = null;
+
+            // Try each model in sequence (graceful failover)
+            for (let i = 0; i < FALLBACK_MODELS.length; i++) {
+                const model = FALLBACK_MODELS[i];
+                try {
+                    modelIndicator.textContent = `Trying ${model.name}...`;
+                    
+                    const payload = {
+                        prompt: userPrompt,
+                        system: MASTER_PROMPT_ENGINEER_INSTRUCTION,
+                        model: model.id
+                    };
+
+                    const data = await fetchDataWithCache(payload);
+                    
+                    if (data?.result) {
+                        result = data.result;
+                        modelIndicator.textContent = `Powered by ${model.name}`;
+                        break; // Success! Exit the loop
+                    } else {
+                        throw new Error(`Model ${model.name} failed`);
+                    }
+                } catch (err) {
+                    lastError = err;
+                    console.warn(`Model ${model.name} failed:`, err.message);
+                    // Continue to next model (silent failover)
+                }
+            }
+
+            // Hide loading
+            loading?.classList.add('hidden');
+            btn.disabled = false;
+
+            if (result) {
+                outputContent.textContent = result;
+                outputBox?.classList.add('has-content');
+                showToast('Professional prompt generated!');
+                
+                // Save to history
+                console.log('Attempting to save to history...'); // For debugging 
+                const promptToSave = document.getElementById('raw-prompt-input')?.value || "Unknown Prompt"; 
+                if (window.saveToHistory) window.saveToHistory(promptToSave, result); 
+                console.log('Save function triggered for:', promptToSave); 
+            } else {
+                // All models failed - show graceful message
+                outputContent.textContent = 'Unable to generate prompt at this time. Please try again later.';
+                modelIndicator.textContent = 'All models temporarily unavailable';
+                showToast('Service temporarily unavailable');
+            }
+        }
+
+        function copyImproverOutput() {
+            const outputContent = document.getElementById('improver-output-content');
+            if (outputContent && outputContent.textContent.trim()) {
+                copyToClipboardRaw(outputContent.textContent);
+                showToast('Copied to clipboard!');
+            }
+        }
+
+        // --- VIDEO TUTORIAL FUNCTIONS ---
+        // Play function disabled as video is now set to autoplay/loop in iframe src
+        function playVideo() {
+            return;
+        }
+
+        // Intersection Observer for auto-play when video enters viewport
+        function setupVideoObserver() {
+            // Iframe doesn't support easy play/pause via JS observer without PostMessage API
+            // Let it handle autoplay via the iframe src parameters if supported
+            return;
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            // Set dark mode as default if not already set
+            let savedTheme = localStorage.getItem('prompt-studio-theme');
+            if (!savedTheme) {
+                savedTheme = 'dark';
+                localStorage.setItem('prompt-studio-theme', 'dark');
+            }
+
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            if (savedTheme === 'light') {
+                document.body.classList.remove('dark-mode');
+                document.getElementById('theme-icon').className = 'fa-solid fa-sun text-xl text-[var(--primary)]';
+            } else {
+                document.body.classList.add('dark-mode');
+                document.getElementById('theme-icon').className = 'fa-solid fa-moon text-xl text-[var(--primary)]';
+            }
+            
+            navigateTo('home');
+            renderPrompts();
+            renderCommunity();
+            if (window.renderHistoryUI) window.renderHistoryUI();
+            setupVideoObserver(); // Initialize video auto-play observer
+            setupFaqAccordion();
+        });
+
+        function setupFaqAccordion() {
+            const faqItems = document.querySelectorAll('.faq-item');
+            
+            faqItems.forEach(item => {
+                const question = item.querySelector('.faq-question');
+                question.addEventListener('click', () => {
+                    const isActive = item.classList.contains('active');
+                    
+                    // Close all other items
+                    faqItems.forEach(otherItem => {
+                        if (otherItem !== item) {
+                            otherItem.classList.remove('active');
+                        }
+                    });
+                    
+                    // Toggle current item
+                    item.classList.toggle('active', !isActive);
+                    
+                    // Update all icons
+                    faqItems.forEach(faqItem => {
+                        const icon = faqItem.querySelector('.faq-icon');
+                        if (faqItem.classList.contains('active')) {
+                            icon.classList.remove('fa-plus');
+                            icon.classList.add('fa-minus');
+                        } else {
+                            icon.classList.remove('fa-minus');
+                            icon.classList.add('fa-plus');
+                        }
+                    });
+                });
+            });
+        }
+    </script>
+</body>
+</html>

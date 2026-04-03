@@ -1,0 +1,9 @@
+.history-card:hover { border-color: #00d4ff !important; background: #222 !important; transform: translateY(-2px); }.history-card {
+    transition: all 0.3s ease;
+}
+.history-card:hover {
+    border-color: #00d4ff !important;
+    background: #222 !important;
+    transform: translateY(-2px);
+}
+/* Language Dropdown Styles moved to index.html for centralized control */
