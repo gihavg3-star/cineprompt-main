@@ -1,15 +1,3 @@
-require('dotenv').config();
-const promptCache = new Map();
-const CACHE_MAX_ENTRIES = 500;
-
-function enforceCacheLimit() {
-    while (promptCache.size > CACHE_MAX_ENTRIES) {
-        const oldestKey = promptCache.keys().next().value;
-        if (oldestKey === undefined) break;
-        promptCache.delete(oldestKey);
-    }
-}
-
 const MODELS = [
     'qwen/qwen3.6-plus:free',
     'nousresearch/hermes-3-llama-3.1-405b:free',
@@ -25,8 +13,6 @@ const MODELS = [
     'google/gemma-3-27b-it:free'
 ];
 
-const FINAL_FALLBACK_MODEL = 'google/gemma-3-12b-it:free';
-
 const API_KEYS = [
     process.env.OPENROUTER_API_KEY,
     process.env.API_KEY_1, process.env.API_KEY_2, process.env.API_KEY_3, process.env.API_KEY_4,
@@ -36,64 +22,119 @@ const API_KEYS = [
     process.env.API_KEY_17, process.env.API_KEY_18, process.env.API_KEY_19, process.env.API_KEY_20
 ].filter(key => key && key.trim() !== "");
 
+// Netlify Function Handler
 exports.handler = async (event, context) => {
+    // 1. Explicitly check for POST method
     if (event.httpMethod !== "POST") {
-        return { statusCode: 405, body: "Method Not Allowed" };
+        return { 
+            statusCode: 405, 
+            body: JSON.stringify({ error: "Method Not Allowed" }),
+            headers: { 'Content-Type': 'application/json' }
+        };
     }
 
-    let body;
     try {
-        body = JSON.parse(event.body);
-    } catch (e) {
-        return { statusCode: 400, body: JSON.stringify({ error: "Invalid JSON" }) };
-    }
+        const body = JSON.parse(event.body);
+        const { prompt, system, stream: streamRequested } = body;
 
-    const { prompt, system } = body;
-    if (!prompt) {
-        return { statusCode: 400, body: JSON.stringify({ error: 'Prompt is required' }) };
-    }
+        if (!prompt) {
+            return { 
+                statusCode: 400, 
+                body: JSON.stringify({ error: 'Prompt is required' }),
+                headers: { 'Content-Type': 'application/json' }
+            };
+        }
 
-    const normalizedPrompt = prompt.trim().toLowerCase();
-    if (promptCache.has(normalizedPrompt)) {
-        return { statusCode: 200, body: JSON.stringify({ result: promptCache.get(normalizedPrompt) }) };
-    }
+        let lastError = null;
 
-    let lastError = null;
-    for (let i = 0; i < API_KEYS.length; i++) {
-        const apiKey = API_KEYS[i];
-        const modelId = MODELS[i % MODELS.length];
+        for (let i = 0; i < API_KEYS.length; i++) {
+            const apiKey = API_KEYS[i];
+            const modelId = MODELS[i % MODELS.length];
 
-        try {
-            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${apiKey}`,
-                    'Content-Type': 'application/json',
-                    'HTTP-Referer': 'https://promptstudio.pro',
-                    'X-Title': 'Prompt Studio'
-                },
-                body: JSON.stringify({
-                    model: modelId,
-                    messages: [{ role: "user", content: system ? `${system}\n\n${prompt}` : prompt }]
-                })
-            });
+            try {
+                const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json',
+                        'HTTP-Referer': 'https://promptstudio.pro',
+                        'X-Title': 'Prompt Studio'
+                    },
+                    body: JSON.stringify({
+                        model: modelId,
+                        messages: [{ role: "user", content: system ? `${system}\n\n${prompt}` : prompt }],
+                        stream: !!streamRequested
+                    })
+                });
 
-            if (response.ok) {
-                const data = await response.json();
-                const generatedText = data.choices[0].message.content || 'No content generated';
-                promptCache.set(normalizedPrompt, generatedText);
-                enforceCacheLimit();
-                return { statusCode: 200, body: JSON.stringify({ result: generatedText }) };
-            } else {
-                const errorText = await response.text();
-                lastError = errorText;
+                if (response.ok) {
+                    if (streamRequested) {
+                        // For Netlify streaming, we need to return a Response object 
+                        // and use the 'stream' property or similar depending on the runtime.
+                        // Standard Netlify Functions (v2) support returning a Response object.
+                        const encoder = new TextEncoder();
+                        const decoder = new TextDecoder();
+                        
+                        const stream = new ReadableStream({
+                            async start(controller) {
+                                const reader = response.body.getReader();
+                                let buffer = "";
+                                while (true) {
+                                    const { done, value } = await reader.read();
+                                    if (done) break;
+                                    buffer += decoder.decode(value, { stream: true });
+                                    const lines = buffer.split('\n');
+                                    buffer = lines.pop();
+                                    for (const line of lines) {
+                                        const trimmed = line.trim();
+                                        if (!trimmed || trimmed === 'data: [DONE]') continue;
+                                        if (trimmed.startsWith('data: ')) {
+                                            try {
+                                                const data = JSON.parse(trimmed.slice(6));
+                                                const content = data.choices[0]?.delta?.content || '';
+                                                if (content) controller.enqueue(encoder.encode(content));
+                                            } catch (e) {}
+                                        }
+                                    }
+                                }
+                                controller.close();
+                            }
+                        });
+
+                        return new Response(stream, {
+                            headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+                        });
+                    } else {
+                        const data = await response.json();
+                        const generatedText = data.choices[0]?.message?.content || 'No content generated';
+                        return {
+                            statusCode: 200,
+                            body: JSON.stringify({ result: generatedText }),
+                            headers: { 'Content-Type': 'application/json' }
+                        };
+                    }
+                } else {
+                    const errorText = await response.text();
+                    lastError = errorText;
+                    continue;
+                }
+            } catch (err) {
+                lastError = err.message;
                 continue;
             }
-        } catch (err) {
-            lastError = err.message;
-            continue;
         }
-    }
 
-    return { statusCode: 500, body: JSON.stringify({ error: `All models failed. Last error: ${lastError}` }) };
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ error: `All models failed. Last error: ${lastError}` }),
+            headers: { 'Content-Type': 'application/json' }
+        };
+
+    } catch (err) {
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ error: `Server error: ${err.message}` }),
+            headers: { 'Content-Type': 'application/json' }
+        };
+    }
 };

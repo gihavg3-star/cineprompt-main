@@ -102,11 +102,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
 const COMMUNITY_PROMPTS_DATA = [
     {
-        category: "Digital Art",
+        category: "Creative",
         preview: "Cinematic portrait of a cyberpunk samurai in neo-tokyo, raining, neon lights reflection...",
         prompt: "Cinematic portrait of a cyberpunk samurai in neo-tokyo, raining, neon lights reflection, 8k resolution, highly detailed, sharp focus, masterpiece",
         likes: 1240,
         copies: 850
+    },
+    {
+        category: "Creative",
+        preview: "Hyper-realistic enchanted forest with glowing mushrooms and mystical creatures at dusk...",
+        prompt: "Hyper-realistic enchanted forest, bioluminescent mushrooms, mystical creatures, dusk atmosphere, fireflies, volumetric lighting, 8k, Unreal Engine 5 render style",
+        likes: 1560,
+        copies: 920
     },
     {
         category: "Coding",
@@ -116,30 +123,55 @@ const COMMUNITY_PROMPTS_DATA = [
         copies: 420
     },
     {
-        category: "SEO",
-        preview: "Write a high-ranking blog post title and outline for 'The Future of AI in Marketing'...",
-        prompt: "Act as an SEO expert. Provide 10 catchy, high-CTR blog post titles and a detailed SEO-optimized outline for an article titled 'The Future of AI in Marketing'. Include target keywords and meta descriptions.",
+        category: "Coding",
+        preview: "Python script for automated data cleaning and analysis using Pandas and Matplotlib...",
+        prompt: "Write a Python script using Pandas for cleaning a CSV dataset. Include steps for handling missing values, removing duplicates, and generating a basic summary plot using Matplotlib.",
+        likes: 840,
+        copies: 380
+    },
+    {
+        category: "Marketing",
+        preview: "High-conversion Facebook ad copy for a luxury sneaker brand, targeting Gen Z...",
+        prompt: "Write 3 variations of high-conversion Facebook ad copy for a new limited-edition luxury sneaker. Target audience: Gen Z fashion enthusiasts. Focus on exclusivity, comfort, and street style.",
         likes: 750,
         copies: 310
     },
     {
-        category: "Copywriting",
-        preview: "Persuasive email sequence for a SaaS product launch, focusing on pain points and benefits...",
-        prompt: "Write a 3-part persuasive email sequence for a new SaaS tool that automates social media scheduling. Focus on solving the 'lack of time' pain point and highlight the 'increased engagement' benefit. Use a friendly yet professional tone.",
+        category: "Marketing",
+        preview: "Engaging Instagram caption for a new eco-friendly skincare line launch...",
+        prompt: "Create 5 engaging Instagram captions for the launch of an eco-friendly, vegan skincare line. Use a mix of educational, inspirational, and sales-focused tones. Include relevant hashtags.",
         likes: 620,
-        copies: 190
+        copies: 280
+    },
+    {
+        category: "Writing",
+        preview: "Act as an SEO expert. Write a high-ranking blog post title and outline for 'The Future of AI'...",
+        prompt: "Act as an SEO expert. Provide 10 catchy, high-CTR blog post titles and a detailed SEO-optimized outline for an article titled 'The Future of AI in Marketing'. Include target keywords and meta descriptions.",
+        likes: 890,
+        copies: 450
+    },
+    {
+        category: "Writing",
+        preview: "Short sci-fi story opening about a civilization living on a Dyson sphere around a dying star...",
+        prompt: "Write the opening scene (500 words) of a sci-fi story set on a Dyson sphere. The sun is dying, and the internal atmosphere is failing. Focus on the sensory details and the sense of impending doom.",
+        likes: 710,
+        copies: 230
     }
 ];
 
-window.renderHomeCommunityPrompts = function() {
+window.renderHomeCommunityPrompts = function(filter = 'All') {
     const grid = document.getElementById('community-prompts-grid');
     if (!grid) return;
 
     const lang = localStorage.getItem('preferredLanguage') || 'en';
     const t = window.translations[lang] || window.translations.en;
 
-    grid.innerHTML = COMMUNITY_PROMPTS_DATA.map(item => `
-        <div class="community-card">
+    const filteredData = filter === 'All' 
+        ? COMMUNITY_PROMPTS_DATA 
+        : COMMUNITY_PROMPTS_DATA.filter(item => item.category === filter);
+
+    grid.innerHTML = filteredData.map(item => `
+        <div class="community-card fade-in-active">
             <div class="card-category">${item.category}</div>
             <p class="card-preview">${item.preview}</p>
             <div class="card-stats">
@@ -153,6 +185,24 @@ window.renderHomeCommunityPrompts = function() {
             </div>
         </div>
     `).join('');
+}
+
+window.filterCommunity = function(category, btn) {
+    // Update active tab UI
+    document.querySelectorAll('.category-tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    const grid = document.getElementById('community-prompts-grid');
+    if (!grid) return;
+
+    // Fade out effect
+    const cards = grid.querySelectorAll('.community-card');
+    cards.forEach(card => card.classList.add('fade-out'));
+
+    // Wait for fade out, then re-render
+    setTimeout(() => {
+        window.renderHomeCommunityPrompts(category);
+    }, 300);
 }
 
 window.applyCommunityPrompt = function(encodedPrompt) {
@@ -510,44 +560,75 @@ window.addEventListener('hashchange', () => {
  */
 
 // --- CACHE SYSTEM ---
-async function fetchDataWithCache(payload) {
+async function fetchDataWithCache(payload, onStream = null) {
     const cacheKey = `api_cache_${btoa(unescape(encodeURIComponent(JSON.stringify(payload))))}`.substring(0, 100);
     const cachedData = localStorage.getItem(cacheKey);
     const cacheTimestamp = localStorage.getItem(`${cacheKey}_time`);
     const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
 
-    // Check if cache exists and is still fresh
-    if (cachedData && cacheTimestamp && (Date.now() - parseInt(cacheTimestamp) < CACHE_DURATION)) {
+    // Check if cache exists and is still fresh (don't use cache for streaming)
+    if (!onStream && cachedData && cacheTimestamp && (Date.now() - parseInt(cacheTimestamp) < CACHE_DURATION)) {
         console.log("FETCHING FROM CACHE... Success!");
         return JSON.parse(cachedData);
     }
 
     // If no cache or expired, fetch from API
     console.log("Cache miss. FETCHING FROM API...");
-    const response = await fetch(API_URL, {
+    
+    const fetchOptions = {
         method: 'POST',
         headers: { 
             'Content-Type': 'application/json',
             'Accept': 'application/json'
         },
-        body: JSON.stringify(payload)
-    });
+        body: JSON.stringify({ ...payload, stream: !!onStream })
+    };
 
-    const data = await response.json().catch(() => ({}));
-    
-    if (!response.ok) {
-        throw new Error(data?.error || `API Error: ${response.status}`);
+    try {
+        const response = await fetch(API_URL, fetchOptions);
+
+        if (!response.ok) {
+            if (response.status === 404 || response.status === 405) {
+                const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                if (isLocal) {
+                    throw new Error("API features require running via 'vercel dev' or deploying to Vercel (Local Live Server doesn't support Serverless Functions).");
+                }
+            }
+            const data = await response.json().catch(() => ({}));
+            throw new Error(data?.error || `API Error: ${response.status}`);
+        }
+
+        if (onStream) {
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let fullText = "";
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value, { stream: true });
+                fullText += chunk;
+                onStream(chunk, fullText);
+            }
+            
+            const finalData = { result: fullText };
+            localStorage.setItem(cacheKey, JSON.stringify(finalData));
+            localStorage.setItem(`${cacheKey}_time`, Date.now().toString());
+            return finalData;
+        } else {
+            const data = await response.json().catch(() => ({}));
+            if (!data.result) {
+                throw new Error("Invalid API response format (missing 'result' field)");
+            }
+            localStorage.setItem(cacheKey, JSON.stringify(data));
+            localStorage.setItem(`${cacheKey}_time`, Date.now().toString());
+            return data;
+        }
+    } catch (error) {
+        console.error("Fetch Error:", error);
+        throw error;
     }
-
-    if (!data.result) {
-        throw new Error("Invalid API response format (missing 'result' field)");
-    }
-
-    // Store in Cache
-    localStorage.setItem(cacheKey, JSON.stringify(data));
-    localStorage.setItem(`${cacheKey}_time`, Date.now().toString());
-
-    return data;
 }
 
 async function executeHubTool(toolName) {

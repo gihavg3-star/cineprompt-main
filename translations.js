@@ -111,7 +111,12 @@ const translations = {
         community_prompts_title: "Top Community Prompts",
         view_all: "View All",
         try_it: "Try it",
-        copy_prompt: "Copy"
+        copy_prompt: "Copy",
+        cat_all: "All",
+        cat_creative: "Creative",
+        cat_coding: "Coding",
+        cat_marketing: "Marketing",
+        cat_writing: "Writing"
     },
     ar: {
         navbar_home: "الرئيسية",
@@ -225,7 +230,12 @@ const translations = {
         community_prompts_title: "أفضل برومبت المجتمع",
         view_all: "عرض الكل",
         try_it: "جربه الآن",
-        copy_prompt: "نسخ"
+        copy_prompt: "نسخ",
+        cat_all: "الكل",
+        cat_creative: "إبداعي",
+        cat_coding: "برمجة",
+        cat_marketing: "تسويق",
+        cat_writing: "كتابة"
     },
     fr: {
         navbar_home: "Accueil",

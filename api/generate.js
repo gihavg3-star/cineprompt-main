@@ -1,14 +1,7 @@
-
-const promptCache = new Map();
-const CACHE_MAX_ENTRIES = 500;
-
-function enforceCacheLimit() {
-    while (promptCache.size > CACHE_MAX_ENTRIES) {
-        const oldestKey = promptCache.keys().next().value;
-        if (oldestKey === undefined) break;
-        promptCache.delete(oldestKey);
-    }
-}
+// Vercel Edge Runtime Configuration (Non-Next.js)
+export const config = {
+    runtime: 'edge'
+};
 
 const MODELS = [
     'qwen/qwen3.6-plus:free',
@@ -25,8 +18,6 @@ const MODELS = [
     'google/gemma-3-27b-it:free'
 ];
 
-const FINAL_FALLBACK_MODEL = 'google/gemma-3-12b-it:free';
-
 const API_KEYS = [
     process.env.OPENROUTER_API_KEY,
     process.env.API_KEY_1, process.env.API_KEY_2, process.env.API_KEY_3, process.env.API_KEY_4,
@@ -36,90 +27,113 @@ const API_KEYS = [
     process.env.API_KEY_17, process.env.API_KEY_18, process.env.API_KEY_19, process.env.API_KEY_20
 ].filter(key => key && key.trim() !== "");
 
-module.exports = async (req, res) => {
-    // Only allow POST requests for /api/generate
+// Vercel Edge Function Default Export
+export default async function handler(req) {
+    // 1. Explicitly check for POST method
     if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method Not Allowed' });
+        return new Response(JSON.stringify({ error: 'Method Not Allowed' }), {
+            status: 405,
+            headers: { 'Content-Type': 'application/json' }
+        });
     }
 
-    const { prompt, system } = req.body;
+    try {
+        const body = await req.json();
+        const { prompt, system, stream: streamRequested } = body;
 
-    if (!prompt) {
-        return res.status(400).json({ error: 'Prompt is required' });
-    }
-
-    const normalizedPrompt = prompt.trim().toLowerCase();
-    if (promptCache.has(normalizedPrompt)) {
-        return res.json({ result: promptCache.get(normalizedPrompt) });
-    }
-
-    let lastError = null;
-
-    for (let i = 0; i < API_KEYS.length; i++) {
-        const apiKey = API_KEYS[i];
-        const modelId = MODELS[i % MODELS.length];
-
-        try {
-            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${apiKey}`,
-                    'Content-Type': 'application/json',
-                    'HTTP-Referer': req.headers.origin || 'https://promptstudio.pro',
-                    'X-Title': 'Prompt Studio'
-                },
-                body: JSON.stringify({
-                    model: modelId,
-                    messages: [{ role: "user", content: system ? `${system}\n\n${prompt}` : prompt }]
-                })
+        if (!prompt) {
+            return new Response(JSON.stringify({ error: 'Prompt is required' }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' }
             });
+        }
 
-            if (response.ok) {
-                const data = await response.json();
-                const generatedText = data.choices[0].message.content || 'No content generated';
-                promptCache.set(normalizedPrompt, generatedText);
-                enforceCacheLimit();
-                return res.json({ result: generatedText });
-            } else {
-                const errorText = await response.text();
-                if (response.status === 429) {
-                    await new Promise(resolve => setTimeout(resolve, 2000));
+        let lastError = null;
+
+        for (let i = 0; i < API_KEYS.length; i++) {
+            const apiKey = API_KEYS[i];
+            const modelId = MODELS[i % MODELS.length];
+
+            try {
+                const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json',
+                        'HTTP-Referer': 'https://promptstudio.pro',
+                        'X-Title': 'Prompt Studio'
+                    },
+                    body: JSON.stringify({
+                        model: modelId,
+                        messages: [{ role: "user", content: system ? `${system}\n\n${prompt}` : prompt }],
+                        stream: !!streamRequested
+                    })
+                });
+
+                if (response.ok) {
+                    if (streamRequested) {
+                        const encoder = new TextEncoder();
+                        const decoder = new TextDecoder();
+                        
+                        const stream = new ReadableStream({
+                            async start(controller) {
+                                const reader = response.body.getReader();
+                                let buffer = "";
+                                
+                                while (true) {
+                                    const { done, value } = await reader.read();
+                                    if (done) break;
+                                    
+                                    buffer += decoder.decode(value, { stream: true });
+                                    const lines = buffer.split('\n');
+                                    buffer = lines.pop();
+                                    
+                                    for (const line of lines) {
+                                        const trimmed = line.trim();
+                                        if (!trimmed || trimmed === 'data: [DONE]') continue;
+                                        if (trimmed.startsWith('data: ')) {
+                                            try {
+                                                const data = JSON.parse(trimmed.slice(6));
+                                                const content = data.choices[0]?.delta?.content || '';
+                                                if (content) controller.enqueue(encoder.encode(content));
+                                            } catch (e) {}
+                                        }
+                                    }
+                                }
+                                controller.close();
+                            }
+                        });
+                        
+                        return new Response(stream, {
+                            headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+                        });
+                    } else {
+                        const data = await response.json();
+                        const generatedText = data.choices[0]?.message?.content || 'No content generated';
+                        return new Response(JSON.stringify({ result: generatedText }), {
+                            headers: { 'Content-Type': 'application/json' }
+                        });
+                    }
+                } else {
+                    const errorText = await response.text();
+                    lastError = errorText;
+                    continue;
                 }
-                lastError = errorText;
+            } catch (err) {
+                lastError = err.message;
                 continue;
             }
-        } catch (err) {
-            lastError = err.message;
-            continue;
         }
-    }
 
-    // FINAL FALLBACK
-    try {
-        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${API_KEYS[0]}`,
-                'Content-Type': 'application/json',
-                'HTTP-Referer': req.headers.origin || 'https://promptstudio.pro',
-                'X-Title': 'Prompt Studio'
-            },
-            body: JSON.stringify({
-                model: FINAL_FALLBACK_MODEL,
-                messages: [{ role: "user", content: system ? `${system}\n\n${prompt}` : prompt }]
-            })
+        return new Response(JSON.stringify({ error: `All models failed. Last error: ${lastError}` }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' }
         });
 
-        if (response.ok) {
-            const data = await response.json();
-            const generatedText = data.choices[0].message.content || 'No content generated';
-            promptCache.set(normalizedPrompt, generatedText);
-            enforceCacheLimit();
-            return res.json({ result: generatedText });
-        }
     } catch (err) {
-        // ignore fallback error
+        return new Response(JSON.stringify({ error: `Server error: ${err.message}` }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' }
+        });
     }
-
-    res.status(500).json({ error: `All models failed. Last error: ${lastError}` });
-};
+}

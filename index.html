@@ -1291,12 +1291,64 @@
 
 /* Community Prompts Grid */
 .community-prompts-section {
-    margin-top: 4rem;
-    animation: slideUpFade 0.8s ease-out forwards;
-    padding: 0 1rem;
-}
+            margin-top: 4rem;
+            animation: slideUpFade 0.8s ease-out forwards;
+            padding: 0 1rem;
+        }
 
-@keyframes slideUpFade {
+        /* Category Tabs Bar */
+        .category-tabs-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            justify-content: center;
+        }
+
+        .category-tab-btn {
+            padding: 8px 24px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(5px);
+        }
+
+        .category-tab-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(0, 212, 255, 0.3);
+            color: var(--text-main);
+        }
+
+        .category-tab-btn.active {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(176, 38, 255, 0.2));
+            border-color: #00d4ff;
+            color: #00d4ff;
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+            text-shadow: 0 0 8px rgba(0, 212, 255, 0.5);
+        }
+
+        /* Card Animation for Filtering */
+        .community-card.fade-out {
+            opacity: 0;
+            transform: scale(0.95) translateY(10px);
+            transition: all 0.3s ease;
+        }
+
+        .community-card.fade-in-active {
+            animation: cardSlideIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes cardSlideIn {
+            from { opacity: 0; transform: translateY(20px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @keyframes slideUpFade {
     from { opacity: 0; transform: translateY(30px); }
     to { opacity: 1; transform: translateY(0); }
 }
@@ -1893,16 +1945,25 @@
             <!-- NEW: Top Community Prompts Section -->
             <div class="community-prompts-section">
                 <div class="flex items-center justify-between mb-6">
-                    <div class="flex items-center gap-3">
-                        <div class="w-2 h-8 bg-gradient-to-b from-[#00d4ff] to-[#b026ff] rounded-full"></div>
-                        <h2 class="text-2xl font-black tracking-tight" data-i18n="community_prompts_title">Top Community Prompts</h2>
+                        <div class="flex items-center gap-3">
+                            <div class="w-2 h-8 bg-gradient-to-b from-[#00d4ff] to-[#b026ff] rounded-full"></div>
+                            <h2 class="text-2xl font-black tracking-tight" data-i18n="community_prompts_title">Top Community Prompts</h2>
+                        </div>
+                        <a onclick="navigateTo('community')" class="text-sm font-bold text-[#00d4ff] hover:underline cursor-pointer" data-i18n="view_all">View All <i class="fa-solid fa-arrow-right ml-1"></i></a>
                     </div>
-                    <a onclick="navigateTo('community')" class="text-sm font-bold text-[#00d4ff] hover:underline cursor-pointer" data-i18n="view_all">View All <i class="fa-solid fa-arrow-right ml-1"></i></a>
-                </div>
-                
-                <div id="community-prompts-grid" class="community-grid">
-                    <!-- Mock data will be injected here via JS -->
-                </div>
+
+                    <!-- Category Tabs -->
+                    <div class="category-tabs-bar">
+                        <button class="category-tab-btn active" onclick="filterCommunity('All', this)" data-i18n="cat_all">All</button>
+                        <button class="category-tab-btn" onclick="filterCommunity('Creative', this)" data-i18n="cat_creative">Creative</button>
+                        <button class="category-tab-btn" onclick="filterCommunity('Coding', this)" data-i18n="cat_coding">Coding</button>
+                        <button class="category-tab-btn" onclick="filterCommunity('Marketing', this)" data-i18n="cat_marketing">Marketing</button>
+                        <button class="category-tab-btn" onclick="filterCommunity('Writing', this)" data-i18n="cat_writing">Writing</button>
+                    </div>
+                    
+                    <div id="community-prompts-grid" class="community-grid">
+                        <!-- Mock data will be injected here via JS -->
+                    </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -2629,37 +2690,62 @@
         ];
 
         // --- CACHE SYSTEM ---
-        async function fetchDataWithCache(payload) {
+        async function fetchDataWithCache(payload, onStream = null) {
             const cacheKey = `api_cache_${btoa(unescape(encodeURIComponent(JSON.stringify(payload))))}`.substring(0, 100);
             const cachedData = localStorage.getItem(cacheKey);
             const cacheTimestamp = localStorage.getItem(`${cacheKey}_time`);
             const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
 
-            // Check if cache exists and is still fresh
-            if (cachedData && cacheTimestamp && (Date.now() - parseInt(cacheTimestamp) < CACHE_DURATION)) {
+            // Check if cache exists and is still fresh (don't use cache for streaming)
+            if (!onStream && cachedData && cacheTimestamp && (Date.now() - parseInt(cacheTimestamp) < CACHE_DURATION)) {
                 console.log("FETCHING FROM CACHE... Success!");
                 return JSON.parse(cachedData);
             }
 
             // If no cache or expired, fetch from API
             console.log("Cache miss. FETCHING FROM API...");
-            const response = await fetch('/api/generate', {
+            
+            const fetchOptions = {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
+                body: JSON.stringify({ ...payload, stream: !!onStream })
+            };
 
-            const data = await response.json().catch(() => ({}));
-            
+            const response = await fetch('/api/generate', fetchOptions);
+
             if (!response.ok) {
-                throw new Error(data?.details || data?.error || `Server error: ${response.status}`);
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData?.details || errorData?.error || `Server error: ${response.status}`);
             }
 
-            // Store in Cache
-            localStorage.setItem(cacheKey, JSON.stringify(data));
-            localStorage.setItem(`${cacheKey}_time`, Date.now().toString());
+            if (onStream) {
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let fullText = "";
 
-            return data;
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value, { stream: true });
+                    // Handle server-sent events (SSE) format if necessary
+                    // For simple streaming, we assume raw chunks
+                    fullText += chunk;
+                    onStream(chunk, fullText);
+                }
+                
+                const finalData = { result: fullText };
+                // Store in Cache after full stream
+                localStorage.setItem(cacheKey, JSON.stringify(finalData));
+                localStorage.setItem(`${cacheKey}_time`, Date.now().toString());
+                return finalData;
+            } else {
+                const data = await response.json().catch(() => ({}));
+                // Store in Cache
+                localStorage.setItem(cacheKey, JSON.stringify(data));
+                localStorage.setItem(`${cacheKey}_time`, Date.now().toString());
+                return data;
+            }
         }
 
         // --- ENGINE ---
@@ -2820,7 +2906,15 @@ Make it clear, structured, and optimized.
 
     try {
         const systemPrompt = `You are a Senior Prompt Engineer. Transform the user idea into a detailed, professional prompt in English. Length: ${length}.`;
-        const data = await fetchDataWithCache({ prompt: input, system: systemPrompt });
+        
+        // Use Streaming
+        const onStream = (chunk, fullText) => {
+            if (resultBox) resultBox.classList.remove('hidden');
+            if (loading) loading.classList.add('hidden');
+            if (resultText) resultText.innerText = fullText;
+        };
+
+        const data = await fetchDataWithCache({ prompt: input, system: systemPrompt }, onStream);
 
         const generatedText = data?.result || "No result";
         if (resultText) resultText.innerText = generatedText;
@@ -2837,9 +2931,9 @@ Make it clear, structured, and optimized.
     } catch (err) {
         console.error(err);
         if (resultText) resultText.innerText = "Error: " + (err?.message || "Unknown error");
+        if (resultBox) resultBox.classList.remove('hidden');
+        if (loading) loading.classList.add('hidden');
     } finally {
-        resultBox?.classList.remove('hidden');
-        loading?.classList.add('hidden');
         if (btn) btn.disabled = false;
     }
 }
@@ -3113,7 +3207,14 @@ Output ONLY the improved prompt. No explanations, no preamble, no markdown code 
                         model: model.id
                     };
 
-                    const data = await fetchDataWithCache(payload);
+                    // Enable streaming for Improver
+                    const onStream = (chunk, fullText) => {
+                        if (loading) loading.classList.add('hidden');
+                        if (outputBox) outputBox.classList.add('has-content');
+                        if (outputContent) outputContent.innerText = fullText;
+                    };
+
+                    const data = await fetchDataWithCache(payload, onStream);
                     
                     if (data?.result) {
                         result = data.result;
@@ -3134,7 +3235,7 @@ Output ONLY the improved prompt. No explanations, no preamble, no markdown code 
             btn.disabled = false;
 
             if (result) {
-                outputContent.textContent = result;
+                outputContent.innerText = result;
                 outputBox?.classList.add('has-content');
                 showToast('Professional prompt generated!');
                 
