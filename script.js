@@ -18,6 +18,17 @@ function handleSearchClick() {
     }
 }
 
+function toggleMobileMenu(show) {
+    const menu = document.getElementById('mobile-menu');
+    if (show) {
+        menu.classList.add('active');
+        document.body.style.overflow = 'hidden'; // Prevent scrolling
+    } else {
+        menu.classList.remove('active');
+        document.body.style.overflow = ''; // Restore scrolling
+    }
+}
+
 function globalSearch(query) {
     query = query.toLowerCase().trim();
     if (!query) {
