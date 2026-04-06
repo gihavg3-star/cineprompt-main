@@ -4,6 +4,17 @@
 
 const API_URL = '/api/generate';
 
+// Dynamic Placeholders Array
+const DYNAMIC_PLACEHOLDERS = [
+    'تخيل مدينة مستقبلية في الليل...',
+    'صمم شعاراً لشركة قهوة...',
+    'اكتب قصة قصيرة عن الفضاء...',
+    'صورة واقعية لغابة سحرية...',
+    'خطاب تحفيزي عن النجاح...',
+    'وصف لمنتج حقيبة جلدية فاخرة...',
+    'كود لبرمجة تطبيق مهام بسيط...'
+];
+
 function handleSearchClick() {
     const searchContainer = document.getElementById('search-container');
     const searchInput = document.getElementById('global-search-input');
@@ -26,6 +37,139 @@ function toggleMobileMenu(show) {
     } else {
         menu.classList.remove('active');
         document.body.style.overflow = ''; // Restore scrolling
+    }
+}
+
+let dynamicPlaceholderInterval;
+
+// Logic for Dynamic Placeholders
+function startDynamicPlaceholders() {
+    const input = document.getElementById('home-quick-input');
+    if (!input) return;
+
+    let index = 0;
+    dynamicPlaceholderInterval = setInterval(() => {
+        index = (index + 1) % DYNAMIC_PLACEHOLDERS.length;
+        input.placeholder = DYNAMIC_PLACEHOLDERS[index];
+    }, 3000);
+}
+
+// Logic for Quick Start Tour Bubble
+function initTourBubble() {
+    const bubble = document.getElementById('quick-start-bubble');
+    const input = document.getElementById('home-quick-input');
+    if (!bubble || !input) return;
+
+    const hasSeenTour = localStorage.getItem('hasSeenTour');
+
+    if (!hasSeenTour) {
+        // Show bubble on first visit
+        setTimeout(() => {
+            bubble.classList.add('show');
+        }, 1500); // Small delay for better impact
+    }
+
+    // Hide bubble and stop dynamic placeholders
+    const hideBubble = () => {
+        if (bubble.classList.contains('show')) {
+            bubble.classList.remove('show');
+            localStorage.setItem('hasSeenTour', 'true');
+            
+            // Stop dynamic placeholders as requested
+            if (dynamicPlaceholderInterval) {
+                clearInterval(dynamicPlaceholderInterval);
+                input.placeholder = "Write your idea (e.g., shoe advertisement, futuristic city...)";
+            }
+        }
+    };
+
+    input.addEventListener('focus', hideBubble);
+    input.addEventListener('input', hideBubble);
+}
+
+// Initialize on DOM Load
+document.addEventListener('DOMContentLoaded', () => {
+    // Clear tour state once for development testing
+    if (!localStorage.getItem('dev_tour_reset_v1')) {
+        localStorage.removeItem('hasSeenTour');
+        localStorage.setItem('dev_tour_reset_v1', 'true');
+    }
+
+    startDynamicPlaceholders();
+    initTourBubble();
+    renderHomeCommunityPrompts();
+});
+
+const COMMUNITY_PROMPTS_DATA = [
+    {
+        category: "Digital Art",
+        preview: "Cinematic portrait of a cyberpunk samurai in neo-tokyo, raining, neon lights reflection...",
+        prompt: "Cinematic portrait of a cyberpunk samurai in neo-tokyo, raining, neon lights reflection, 8k resolution, highly detailed, sharp focus, masterpiece",
+        likes: 1240,
+        copies: 850
+    },
+    {
+        category: "Coding",
+        preview: "Create a modern landing page with Tailwind CSS and React, featuring glassmorphism and animations...",
+        prompt: "Create a professional landing page using Tailwind CSS and React. Include a sticky navigation, a hero section with glassmorphism effects, and smooth reveal animations using Framer Motion.",
+        likes: 980,
+        copies: 420
+    },
+    {
+        category: "SEO",
+        preview: "Write a high-ranking blog post title and outline for 'The Future of AI in Marketing'...",
+        prompt: "Act as an SEO expert. Provide 10 catchy, high-CTR blog post titles and a detailed SEO-optimized outline for an article titled 'The Future of AI in Marketing'. Include target keywords and meta descriptions.",
+        likes: 750,
+        copies: 310
+    },
+    {
+        category: "Copywriting",
+        preview: "Persuasive email sequence for a SaaS product launch, focusing on pain points and benefits...",
+        prompt: "Write a 3-part persuasive email sequence for a new SaaS tool that automates social media scheduling. Focus on solving the 'lack of time' pain point and highlight the 'increased engagement' benefit. Use a friendly yet professional tone.",
+        likes: 620,
+        copies: 190
+    }
+];
+
+window.renderHomeCommunityPrompts = function() {
+    const grid = document.getElementById('community-prompts-grid');
+    if (!grid) return;
+
+    const lang = localStorage.getItem('preferredLanguage') || 'en';
+    const t = window.translations[lang] || window.translations.en;
+
+    grid.innerHTML = COMMUNITY_PROMPTS_DATA.map(item => `
+        <div class="community-card">
+            <div class="card-category">${item.category}</div>
+            <p class="card-preview">${item.preview}</p>
+            <div class="card-stats">
+                <span><i class="fa-solid fa-heart"></i> ${item.likes}</span>
+                <span><i class="fa-solid fa-copy"></i> ${item.copies}</span>
+            </div>
+            <div class="card-actions">
+                <button onclick="window.applyCommunityPrompt(\`${btoa(unescape(encodeURIComponent(item.prompt)))}\`)" class="btn-try">
+                    ${t.try_it}
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+window.applyCommunityPrompt = function(encodedPrompt) {
+    console.log("Applying community prompt...");
+    const prompt = decodeURIComponent(escape(atob(encodedPrompt)));
+    const input = document.getElementById('home-quick-input');
+    if (input) {
+        input.value = prompt;
+        input.focus();
+        // Scroll to input smoothly
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        
+        const lang = localStorage.getItem('preferredLanguage') || 'en';
+        const msg = lang === 'ar' ? 'تم نسخ البرومبت!' : 'Prompt Copied!';
+        showToast(msg);
+    } else {
+        console.error("Input element 'home-quick-input' not found");
     }
 }
 
@@ -791,6 +935,7 @@ window.changeLanguage = function(lang) {
 
     // Refresh dynamic UI components
     window.renderHistoryUI();
+    if (typeof renderHomeCommunityPrompts === 'function') renderHomeCommunityPrompts();
 };
 
 // وظيفة فتح وإغلاق القائمة

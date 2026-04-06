@@ -23,7 +23,11 @@ async function generateContent(promptText) {
 }
 
 // مثال ربطه بزر
-document.getElementById("generateBtn").addEventListener("click", () => {
-  const promptText = document.getElementById("promptInput").value;
-  generateContent(promptText);
-});
+const mainGenBtn = document.getElementById("generateBtn");
+if (mainGenBtn) {
+  mainGenBtn.addEventListener("click", () => {
+    const promptInput = document.getElementById("promptInput");
+    const promptText = promptInput ? promptInput.value : "";
+    generateContent(promptText);
+  });
+}

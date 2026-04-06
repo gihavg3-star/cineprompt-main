@@ -104,7 +104,14 @@ const translations = {
         lang_en: "English",
         lang_ar: "Arabic",
         lang_fr: "French",
-        lang_es: "Spanish"
+        lang_es: "Spanish",
+        magic_step_1: "Step 1: Write your simple or complex idea.",
+        magic_step_2: "Step 2: Click on Smart Generate.",
+        magic_step_3: "Step 3: Get highly professional prompt engineering.",
+        community_prompts_title: "Top Community Prompts",
+        view_all: "View All",
+        try_it: "Try it",
+        copy_prompt: "Copy"
     },
     ar: {
         navbar_home: "الرئيسية",
@@ -202,7 +209,7 @@ const translations = {
         // Footer
         footer_tagline: "تمكين المبدعين باستخدام الذكاء الاصطناعي",
         footer_quick_links: "روابط سريعة",
-        footer_support_legal: "الدعم والقانون",
+        footer_support_legal: "الدعم والقانوني",
         footer_contact_us: "اتصل بنا",
         footer_privacy: "سياسة الخصوصية",
         footer_terms: "شروط الخدمة",
@@ -211,7 +218,14 @@ const translations = {
         lang_en: "الإنجليزية",
         lang_ar: "العربية",
         lang_fr: "الفرنسية",
-        lang_es: "الإسبانية"
+        lang_es: "الإسبانية",
+        magic_step_1: "Step 1: اكتب فكرتك البسيطة أو المعقدة.",
+        magic_step_2: "Step 2: اضغط على Smart Generate.",
+        magic_step_3: "Step 3: احصل على هندسة أوامر احترافية للغاية.",
+        community_prompts_title: "أفضل برومبت المجتمع",
+        view_all: "عرض الكل",
+        try_it: "جربه الآن",
+        copy_prompt: "نسخ"
     },
     fr: {
         navbar_home: "Accueil",
