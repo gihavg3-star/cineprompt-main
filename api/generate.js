@@ -1,6 +1,6 @@
-// Vercel Edge Runtime Configuration
+// Vercel Node.js Runtime Configuration
 export const config = {
-    runtime: 'edge'
+    runtime: 'nodejs'
 };
 
 const PROVIDERS = [
