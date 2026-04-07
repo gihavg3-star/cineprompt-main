@@ -1,35 +1,30 @@
-// Vercel Edge Runtime Configuration (Non-Next.js)
+// Vercel Edge Runtime Configuration
 export const config = {
     runtime: 'edge'
 };
 
-const MODELS = [
-    'qwen/qwen3.6-plus:free',
-    'nousresearch/hermes-3-llama-3.1-405b:free',
-    'openai/gpt-oss-120b:free',
-    'google/gemma-3n-e2b-it:free',
-    'meta-llama/llama-3.3-70b-instruct:free',
-    'qwen/qwen3-coder:free',
-    'arcee-ai/trinity-mini:free',
-    'nvidia/nemotron-3-super-120b-a12b:free',
-    'minimax/minimax-m2.5:free',
-    'nvidia/nemotron-3-nano-30b-a3b:free',
-    'google/gemma-3-12b-it:free',
-    'google/gemma-3-27b-it:free'
+const PROVIDERS = [
+    {
+        name: 'OpenRouter',
+        baseUrl: 'https://openrouter.ai/api/v1/chat/completions',
+        apiKey: process.env.API_KEY_1,
+        model: 'qwen/qwen-2.5-72b-instruct:free'
+    },
+    {
+        name: 'Groq_1',
+        baseUrl: 'https://api.groq.com/openai/v1/chat/completions',
+        apiKey: process.env.API_KEY_2,
+        model: 'llama-3.3-70b-versatile'
+    },
+    {
+        name: 'Groq_2',
+        baseUrl: 'https://api.groq.com/openai/v1/chat/completions',
+        apiKey: process.env.API_KEY_3,
+        model: 'llama-3.3-70b-versatile'
+    }
 ];
 
-const API_KEYS = [
-    process.env.OPENROUTER_API_KEY,
-    process.env.API_KEY_1, process.env.API_KEY_2, process.env.API_KEY_3, process.env.API_KEY_4,
-    process.env.API_KEY_5, process.env.API_KEY_6, process.env.API_KEY_7, process.env.API_KEY_8,
-    process.env.API_KEY_9, process.env.API_KEY_10, process.env.API_KEY_11, process.env.API_KEY_12,
-    process.env.API_KEY_13, process.env.API_KEY_14, process.env.API_KEY_15, process.env.API_KEY_16,
-    process.env.API_KEY_17, process.env.API_KEY_18, process.env.API_KEY_19, process.env.API_KEY_20
-].filter(key => key && key.trim() !== "");
-
-// Vercel Edge Function Default Export
 export default async function handler(req) {
-    // 1. Explicitly check for POST method
     if (req.method !== 'POST') {
         return new Response(JSON.stringify({ error: 'Method Not Allowed' }), {
             status: 405,
@@ -50,22 +45,27 @@ export default async function handler(req) {
 
         let lastError = null;
 
-        for (let i = 0; i < API_KEYS.length; i++) {
-            const apiKey = API_KEYS[i];
-            const modelId = MODELS[i % MODELS.length];
+        // API Rotation Loop
+        for (const provider of PROVIDERS) {
+            if (!provider.apiKey) continue;
+
+            console.log(`Trying Provider: ${provider.name}...`);
 
             try {
-                const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                const response = await fetch(provider.baseUrl, {
                     method: 'POST',
                     headers: {
-                        'Authorization': `Bearer ${apiKey}`,
+                        'Authorization': `Bearer ${provider.apiKey}`,
                         'Content-Type': 'application/json',
                         'HTTP-Referer': 'https://promptstudio.pro',
                         'X-Title': 'Prompt Studio'
                     },
                     body: JSON.stringify({
-                        model: modelId,
-                        messages: [{ role: "user", content: system ? `${system}\n\n${prompt}` : prompt }],
+                        model: provider.model,
+                        messages: [
+                            { role: "system", content: system || "You are a professional prompt engineer." },
+                            { role: "user", content: prompt }
+                        ],
                         stream: !!streamRequested
                     })
                 });
@@ -91,12 +91,16 @@ export default async function handler(req) {
                                     for (const line of lines) {
                                         const trimmed = line.trim();
                                         if (!trimmed || trimmed === 'data: [DONE]') continue;
+                                        
+                                        // Both OpenRouter and Groq use OpenAI compatible SSE format
                                         if (trimmed.startsWith('data: ')) {
                                             try {
                                                 const data = JSON.parse(trimmed.slice(6));
                                                 const content = data.choices[0]?.delta?.content || '';
                                                 if (content) controller.enqueue(encoder.encode(content));
-                                            } catch (e) {}
+                                            } catch (e) {
+                                                // Silent catch for partial JSON chunks
+                                            }
                                         }
                                     }
                                 }
@@ -115,23 +119,35 @@ export default async function handler(req) {
                         });
                     }
                 } else {
-                    const errorText = await response.text();
-                    lastError = errorText;
-                    continue;
+                    const errorData = await response.text();
+                    lastError = `Provider ${provider.name} failed (${response.status}): ${errorData}`;
+                    console.warn(lastError);
+                    
+                    // If rate limited or server error, continue to next provider
+                    if (response.status === 429 || response.status >= 500) {
+                        continue;
+                    } else {
+                        // For 400/401 errors, stop and report
+                        return new Response(JSON.stringify({ error: lastError }), {
+                            status: response.status,
+                            headers: { 'Content-Type': 'application/json' }
+                        });
+                    }
                 }
             } catch (err) {
-                lastError = err.message;
+                lastError = `Fetch error with ${provider.name}: ${err.message}`;
+                console.error(lastError);
                 continue;
             }
         }
 
-        return new Response(JSON.stringify({ error: `All models failed. Last error: ${lastError}` }), {
-            status: 500,
+        return new Response(JSON.stringify({ error: `All API keys failed. Last error: ${lastError}` }), {
+            status: 503,
             headers: { 'Content-Type': 'application/json' }
         });
 
     } catch (err) {
-        return new Response(JSON.stringify({ error: `Server error: ${err.message}` }), {
+        return new Response(JSON.stringify({ error: `Critical Server Error: ${err.message}` }), {
             status: 500,
             headers: { 'Content-Type': 'application/json' }
         });

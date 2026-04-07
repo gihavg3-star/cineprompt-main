@@ -4,6 +4,7 @@
   "description": "AI Prompt Studio for CinePrompt",
   "main": "api/generate.js",
   "scripts": {
+    "start-local": "npx vercel dev",
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node api/generate.js"
   },
